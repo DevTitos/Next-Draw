@@ -24,7 +24,7 @@ class PlayerProfile(models.Model):
     total_equity_earned = models.FloatField(default=0.0)
     
     # Currency and resources
-    stars = models.IntegerField(default=0)  # Premium currency
+    stars = models.IntegerField(default=100)  # Premium currency - start with 100
     coins = models.IntegerField(default=1000)  # Regular currency
     
     # Player preferences
@@ -83,19 +83,8 @@ class PlayerProfile(models.Model):
     @property
     def net_worth(self):
         """Calculate player's total net worth"""
-        # This would sum up all venture values + coins + stars converted to currency
-        base_net_worth = self.coins + (self.stars * 100)  # Example conversion
+        base_net_worth = self.coins + (self.stars * 100)
         return base_net_worth
-    
-    @property
-    def join_date(self):
-        """Formatted join date"""
-        return self.created_at.strftime("%B %d, %Y")
-    
-    @property
-    def days_since_joined(self):
-        """Days since player joined"""
-        return (timezone.now() - self.created_at).days
     
     def add_xp(self, amount):
         """Add XP and check for level up"""
@@ -111,7 +100,7 @@ class PlayerProfile(models.Model):
         # Reward player for leveling up
         self.tickets += 2
         self.coins += 500
-        self.stars += 1
+        self.stars += 5
         
         # Create level up activity
         Activity.objects.create(
@@ -119,42 +108,6 @@ class PlayerProfile(models.Model):
             icon='🎯',
             description=f'Reached Level {self.level}!'
         )
-    
-    def add_tickets(self, amount):
-        """Add tickets to player"""
-        self.tickets += amount
-        self.save()
-    
-    def use_ticket(self):
-        """Use one ticket if available"""
-        if self.tickets > 0:
-            self.tickets -= 1
-            self.save()
-            return True
-        return False
-    
-    def update_streak(self):
-        """Update login streak"""
-        today = timezone.now().date()
-        
-        if self.last_login_streak:
-            yesterday = self.last_login_streak + timezone.timedelta(days=1)
-            if today == yesterday:
-                self.streak_days += 1
-            elif today > yesterday:
-                self.streak_days = 1  # Broken streak, start over
-        else:
-            self.streak_days = 1
-        
-        self.last_login_streak = today
-        self.save()
-    
-    def get_leaderboard_position(self):
-        """Get player's position in leaderboard"""
-        profiles = PlayerProfile.objects.filter(
-            total_equity__gt=self.total_equity
-        ).count()
-        return profiles + 1
 
 class Venture(models.Model):
     DIFFICULTY_CHOICES = [
@@ -200,7 +153,6 @@ class Venture(models.Model):
     
     # Metrics
     total_investment = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    success_rate = models.FloatField(default=0.0)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -227,7 +179,16 @@ class Venture(models.Model):
         """Calculate equity share for new participants"""
         if self.current_players >= self.max_players:
             return 0.0
-        return (self.community_equity / self.max_players) * 0.1
+        # More players = smaller individual shares
+        base_share = (self.community_equity / self.max_players)
+        # Adjust for venture difficulty
+        difficulty_multiplier = {
+            'Easy': 0.8,
+            'Medium': 1.0,
+            'Hard': 1.2,
+            'Expert': 1.5
+        }
+        return base_share * difficulty_multiplier.get(self.difficulty, 1.0)
 
 class PlayerVenture(models.Model):
     player = models.ForeignKey(PlayerProfile, on_delete=models.CASCADE, related_name='player_ventures')
@@ -256,16 +217,6 @@ class PlayerVenture(models.Model):
     
     def __str__(self):
         return f"{self.player.user.username} - {self.venture.name}"
-    
-    @property
-    def profit_loss(self):
-        return self.current_value - self.initial_investment
-    
-    @property
-    def profit_loss_percentage(self):
-        if self.initial_investment == 0:
-            return 0.0
-        return (self.profit_loss / self.initial_investment) * 100
 
 class Badge(models.Model):
     BADGE_TYPES = [
@@ -281,7 +232,7 @@ class Badge(models.Model):
     badge_type = models.CharField(max_length=20, choices=BADGE_TYPES, default='achievement')
     
     # Requirements
-    requirement_type = models.CharField(max_length=50)  # 'ventures_joined', 'equity_threshold', etc.
+    requirement_type = models.CharField(max_length=50)
     requirement_value = models.IntegerField()
     
     # Rewards
@@ -316,8 +267,8 @@ class Badge(models.Model):
         return f"{self.name} ({self.get_rarity_display()})"
 
 class PlayerBadge(models.Model):
-    player = models.ForeignKey(PlayerProfile, on_delete=models.CASCADE, related_name='badges_earned')
-    badge = models.ForeignKey(Badge, on_delete=models.CASCADE, related_name='players_earned')
+    player = models.ForeignKey(PlayerProfile, on_delete=models.CASCADE, related_name='player_badges')
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE, related_name='player_badges')
     unlocked_at = models.DateTimeField(auto_now_add=True)
     is_equipped = models.BooleanField(default=False)
 
@@ -344,7 +295,7 @@ class Activity(models.Model):
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES, default='system')
     icon = models.CharField(max_length=10)
     description = models.TextField()
-    metadata = models.JSONField(default=dict, blank=True)  # Store additional data
+    metadata = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -362,43 +313,56 @@ class Activity(models.Model):
 def create_player_profile(sender, instance, created, **kwargs):
     """Automatically create player profile when user is created"""
     if created:
-        PlayerProfile.objects.create(user=instance)
+        player_profile = PlayerProfile.objects.create(user=instance)
         
         # Create welcome activity
         Activity.objects.create(
-            player=instance.playerprofile,
+            player=player_profile,
             activity_type='system',
             icon='🎉',
             description='Welcome to Next Star! Start your venture journey.'
         )
-
-@receiver(post_save, sender=User)
-def save_player_profile(sender, instance, **kwargs):
-    """Save player profile when user is saved"""
-    try:
-        instance.playerprofile.save()
-    except PlayerProfile.DoesNotExist:
-        # Create profile if it doesn't exist
-        PlayerProfile.objects.create(user=instance)
-
-@receiver(post_save, sender=PlayerVenture)
-def update_player_stats(sender, instance, created, **kwargs):
-    """Update player stats when they join a venture"""
-    if created:
-        player_profile = instance.player
-        player_profile.total_ventures_joined += 1
-        player_profile.total_equity += instance.equity_share
-        player_profile.save()
         
-        # Create activity
-        Activity.objects.create(
-            player=player_profile,
-            activity_type='venture_join',
-            icon='⚔️',
-            description=f'Joined venture: {instance.venture.name}',
-            metadata={
-                'venture_id': instance.venture.id,
-                'venture_name': instance.venture.name,
-                'equity_earned': instance.equity_share
-            }
+        # Create default badges
+        create_default_badges()
+
+def create_default_badges():
+    """Create default badges if they don't exist"""
+    default_badges = [
+        {
+            'name': 'Venture Hunter',
+            'icon': '⚔️',
+            'description': 'Join 5 different ventures',
+            'requirement_type': 'ventures_joined',
+            'requirement_value': 5,
+            'reward_xp': 100,
+            'reward_tickets': 5,
+            'rarity': 'rare'
+        },
+        {
+            'name': 'Equity Master',
+            'icon': '📈',
+            'description': 'Reach 25% total equity',
+            'requirement_type': 'equity_threshold',
+            'requirement_value': 25,
+            'reward_xp': 200,
+            'reward_tickets': 10,
+            'rarity': 'epic'
+        },
+        {
+            'name': 'Star Collector',
+            'icon': '⭐',
+            'description': 'Earn 500 stars',
+            'requirement_type': 'stars_earned',
+            'requirement_value': 500,
+            'reward_xp': 150,
+            'reward_tickets': 8,
+            'rarity': 'rare'
+        }
+    ]
+    
+    for badge_data in default_badges:
+        Badge.objects.get_or_create(
+            name=badge_data['name'],
+            defaults=badge_data
         )

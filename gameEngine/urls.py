@@ -6,7 +6,7 @@ urlpatterns = [
     path('', views.landing_page, name='landing'),
     path('login/', views.login_page, name='login_page'),
     path('register/', views.register_page, name='register_page'),
-    path('game/', views.gaming_page, name='gaming'),
+    path('gaming/', views.gaming_page, name='gaming'),
     
     # API endpoints (used by the JavaScript forms)
     path('api/auth/register/', views.api_register, name='api_register'),
@@ -18,4 +18,10 @@ urlpatterns = [
     path('auth/register/', views.traditional_register, name='traditional_register'),
     path('auth/login/', views.traditional_login, name='traditional_login'),
     path('auth/logout/', views.traditional_logout, name='traditional_logout'),
+
+    # API endpoints
+    path('api/profile/', views.api_profile, name='api_profile'),
+    path('api/ventures/', views.api_ventures, name='api_ventures'),
+    path('api/ventures/<int:venture_id>/join/', views.api_join_venture, name='api_join_venture'),
+    path('api/profile/buy_tickets/', views.api_buy_tickets, name='api_buy_tickets'),
 ]

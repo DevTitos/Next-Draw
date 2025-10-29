@@ -4,552 +4,972 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Next Star - 3D Venture Game</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/maze.css' %}">
-    <link rel="stylesheet" href="{% static 'css/eternal-maze.css' %}">
-    <link rel="stylesheet" href="{% static 'css/ceo-matrix.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dao.css' %}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <title>Next Star - Gaming Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --parrot-primary: #1a1a2e;
+            --parrot-secondary: #16213e;
+            --parrot-accent: #00ff88;
+            --parrot-accent-secondary: #0099ff;
+            --parrot-text: #ffffff;
+            --parrot-text-secondary: #888;
+            --parrot-border: #2a2a4a;
+            --parrot-hover: #2a2a4a;
+            --parrot-window-bg: rgba(26, 26, 46, 0.95);
+            --parror-terminal-bg: #0c0c0c;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--parrot-primary) 0%, var(--parrot-secondary) 100%);
+            color: var(--parrot-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Three.js Canvas */
+        #gameCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Top Bar - Parrot OS Style */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: rgba(26, 26, 46, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--parrot-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            color: var(--parrot-accent);
+        }
+
+        .system-tray {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .system-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .system-icon:hover {
+            color: var(--parrot-accent);
+        }
+
+        /* Dock - Parrot OS Style */
+        .dock {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--parrot-border);
+            border-radius: 15px;
+            padding: 10px 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .dock-item {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+        }
+
+        .dock-item:hover {
+            background: var(--parrot-accent);
+            transform: translateY(-5px) scale(1.1);
+            color: #000;
+        }
+
+        .dock-item.active {
+            background: var(--parrot-accent);
+            color: #000;
+        }
+
+        /* Windows */
+        .window {
+            position: absolute;
+            background: var(--parrot-window-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--parrot-border);
+            border-radius: 10px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            min-width: 400px;
+            min-height: 300px;
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .window.maximized {
+            position: fixed;
+            top: 40px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: auto;
+            height: auto;
+            border-radius: 0;
+        }
+
+        .window-header {
+            height: 40px;
+            background: rgba(26, 26, 46, 0.8);
+            border-bottom: 1px solid var(--parrot-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            cursor: move;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .window-title {
+            font-weight: 600;
+            color: var(--parrot-accent);
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .window-control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .window-control.close { background: #ff5f57; }
+        .window-control.minimize { background: #ffbd2e; }
+        .window-control.maximize { background: #28ca42; }
+
+        .window-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        /* Specific Window Styles */
+        #ventureWindow {
+            top: 100px;
+            left: 50px;
+            width: 800px;
+            height: 600px;
+        }
+
+        #portfolioWindow {
+            top: 150px;
+            left: 200px;
+            width: 700px;
+            height: 500px;
+        }
+
+        #profileWindow {
+            top: 120px;
+            right: 50px;
+            width: 500px;
+            height: 550px;
+        }
+
+        #leaderboardWindow {
+            top: 180px;
+            right: 150px;
+            width: 600px;
+            height: 450px;
+        }
+
+        /* Venture Grid */
+        .venture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .venture-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--parrot-border);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .venture-card:hover {
+            border-color: var(--parrot-accent);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .venture-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .venture-icon {
+            font-size: 2rem;
+        }
+
+        .venture-info h3 {
+            color: var(--parrot-accent);
+            margin-bottom: 5px;
+        }
+
+        .venture-stats {
+            display: flex;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: var(--parrot-text-secondary);
+        }
+
+        .venture-description {
+            color: var(--parrot-text-secondary);
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .join-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--parrot-accent);
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .join-btn:hover:not(:disabled) {
+            background: var(--parrot-accent-secondary);
+            transform: translateY(-2px);
+        }
+
+        .join-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Portfolio Grid */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .portfolio-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--parrot-border);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .portfolio-icon {
+            font-size: 1.5rem;
+        }
+
+        .portfolio-details h4 {
+            color: var(--parrot-accent);
+            margin-bottom: 5px;
+        }
+
+        /* Profile Content */
+        .profile-content {
+            padding: 20px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar {
+            font-size: 3rem;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-info h2 {
+            color: var(--parrot-accent);
+            margin-bottom: 5px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--parrot-border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--parrot-accent);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--parrot-text-secondary);
+        }
+
+        /* XP Progress Bar */
+        .xp-progress {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .xp-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--parrot-accent), var(--parrot-accent-secondary));
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dock {
+                bottom: 10px;
+                padding: 8px 15px;
+            }
+
+            .dock-item {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .window {
+                min-width: 300px;
+                min-height: 400px;
+            }
+
+            #ventureWindow,
+            #portfolioWindow,
+            #profileWindow,
+            #leaderboardWindow {
+                top: 50px !important;
+                left: 10px !important;
+                right: 10px !important;
+                width: auto !important;
+                height: auto !important;
+            }
+
+            .venture-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .profile-stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-bar {
+                padding: 0 10px;
+            }
+
+            .logo span {
+                display: none;
+            }
+
+            .system-tray {
+                gap: 10px;
+            }
+
+            .dock {
+                gap: 8px;
+                padding: 5px 10px;
+            }
+
+            .dock-item {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+
+            .window-header {
+                padding: 0 10px;
+            }
+
+            .window-content {
+                padding: 15px;
+            }
+        }
+
+        /* Terminal-like elements */
+        .terminal-window {
+            background: var(--parror-terminal-bg);
+            border: 1px solid var(--parrot-accent);
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            color: var(--parrot-accent);
+        }
+
+        .terminal-prompt {
+            color: var(--parrot-accent-secondary);
+        }
+
+        /* Notification System */
+        .notification {
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            background: var(--parrot-accent);
+            color: #000;
+            padding: 15px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        /* Loading Screen */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--parrot-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--parrot-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <!-- Game Container -->
-    <div id="gameContainer">
-        <!-- 3D Game Canvas -->
-        <canvas id="gameCanvas"></canvas>
-        
-        <!-- Game HUD -->
-        <div id="gameHUD">
-            <!-- Player Stats -->
-            <div class="hud-stats">
-                <div class="stat">
-                    <div class="stat-icon">🎫</div>
-                    <div class="stat-value" id="ticketCount">5</div>
-                    <div class="stat-label">TICKETS</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-icon">🏢</div>
-                    <div class="stat-value" id="ventureCount">3</div>
-                    <div class="stat-label">VENTURES</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-icon">📈</div>
-                    <div class="stat-value" id="equityPercent">12%</div>
-                    <div class="stat-label">EQUITY</div>
-                </div>
-            </div>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div>Loading Next Star...</div>
+    </div>
 
-            <!-- Updated HUD Controls -->
-            <div class="hud-controls">
-                <button class="hud-btn" onclick="openWindow('arenaWindow')">⚔️ ARENA</button>
-                <button class="hud-btn" onclick="openWindow('portfolioWindow')">📊 PORTFOLIO</button>
-                <button class="hud-btn" onclick="openWindow('sharesWindow')">📈 SHARES</button>
-                <button class="hud-btn" onclick="openWindow('projectsWindow')">🚀 PROJECTS</button>
-                <button class="hud-btn" onclick="openWindow('leaderboardWindow')">🏆 RANKINGS</button>
-                <button class="hud-btn" onclick="startEternalMaze()">🌀 ETERNAL MAZE</button>
-                <button class="hud-btn" onclick="startCEOMatrix()">🏢 CEO MATRIX</button>
-                <button class="hud-btn" onclick="startInfiniteMaze()">🌀 INFINITE MAZE</button>
-                <button class="hud-btn" onclick="openWindow('shopWindow')">🛒 SHOP</button>
-                <button class="hud-btn" onclick="openWindow('badgesWindow')">🎨 BADGES</button>
-                <button class="hud-btn" id="authHudBtn" onclick="openAuthOrProfile()">👤 LOGIN</button>
-            </div>
+    <!-- Three.js Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="logo">
+            <span>🦜 NEXT STAR</span>
         </div>
+        <div class="system-tray">
+            <div class="system-icon" id="authHudBtn" onclick="openAuthOrProfile()">👤</div>
+            <div class="system-icon" id="ticketCount">🎫 5</div>
+            <div class="system-icon" id="equityPercent">📈 0%</div>
+            <div class="system-icon" id="ventureCount">⚔️ 0</div>
+        </div>
+    </div>
 
-        <!-- Updated Window Definitions -->
-<div id="gameWindows">
-    <!-- Arena Window - Larger -->
-    <div class="game-window large" id="arenaWindow">
+    <!-- Dock -->
+    <div class="dock">
+        <div class="dock-item active" onclick="openWindow('ventureWindow')" title="Ventures">
+            ⚔️
+        </div>
+        <div class="dock-item" onclick="openWindow('portfolioWindow')" title="Portfolio">
+            📊
+        </div>
+        <div class="dock-item" onclick="openWindow('profileWindow')" title="Profile">
+            👤
+        </div>
+        <div class="dock-item" onclick="openWindow('leaderboardWindow')" title="Leaderboard">
+            🏆
+        </div>
+        <div class="dock-item" onclick="openWindow('shopWindow')" title="Shop">
+            🛒
+        </div>
+        <div class="dock-item" onclick="openWindow('settingsWindow')" title="Settings">
+            ⚙️
+        </div>
+    </div>
+
+    <!-- Windows -->
+    <div class="window" id="ventureWindow">
         <div class="window-header">
-            <span class="window-title">⚔️ VENTURE ARENA</span>
-            <button class="window-close" onclick="closeWindow('arenaWindow')">×</button>
+            <div class="window-title">Venture Marketplace</div>
+            <div class="window-controls">
+                <div class="window-control minimize" onclick="minimizeWindow('ventureWindow')"></div>
+                <div class="window-control maximize" onclick="toggleMaximize('ventureWindow')"></div>
+                <div class="window-control close" onclick="closeWindow('ventureWindow')"></div>
+            </div>
         </div>
         <div class="window-content">
-            <div class="game-grid" id="ventureGrid">
-                <!-- Ventures loaded by game engine -->
+            <div class="venture-grid" id="ventureGrid">
+                <!-- Ventures will be loaded here by JavaScript -->
             </div>
         </div>
     </div>
 
-    <!-- Portfolio Window - Larger -->
-    <div class="game-window large" id="portfolioWindow">
+    <div class="window" id="portfolioWindow">
         <div class="window-header">
-            <span class="window-title">📊 MY PORTFOLIO</span>
-            <button class="window-close" onclick="closeWindow('portfolioWindow')">×</button>
+            <div class="window-title">My Portfolio</div>
+            <div class="window-controls">
+                <div class="window-control minimize" onclick="minimizeWindow('portfolioWindow')"></div>
+                <div class="window-control maximize" onclick="toggleMaximize('portfolioWindow')"></div>
+                <div class="window-control close" onclick="closeWindow('portfolioWindow')"></div>
+            </div>
         </div>
         <div class="window-content">
             <div class="portfolio-grid" id="portfolioGrid">
-                <!-- Portfolio items loaded by game engine -->
+                <!-- Portfolio items will be loaded here -->
             </div>
         </div>
     </div>
 
-    <!-- Shop Window -->
-    <div class="game-window" id="shopWindow">
+    <div class="window" id="profileWindow">
         <div class="window-header">
-            <span class="window-title">🛒 STAR TICKET SHOP</span>
-            <button class="window-close" onclick="closeWindow('shopWindow')">×</button>
+            <div class="window-title">Player Profile</div>
+            <div class="window-controls">
+                <div class="window-control minimize" onclick="minimizeWindow('profileWindow')"></div>
+                <div class="window-control maximize" onclick="toggleMaximize('profileWindow')"></div>
+                <div class="window-control close" onclick="closeWindow('profileWindow')"></div>
+            </div>
         </div>
         <div class="window-content">
-            <div class="shop-items">
-                <div class="shop-item" onclick="buyTickets(1)">
-                    <div class="item-icon">🎫</div>
-                    <div class="item-name">1 TICKET</div>
-                    <div class="item-price">$50</div>
-                </div>
-                <div class="shop-item featured" onclick="buyTickets(5)">
-                    <div class="item-icon">🎫🎫🎫🎫🎫</div>
-                    <div class="item-name">5 TICKETS</div>
-                    <div class="item-price">$200</div>
-                    <div class="item-bonus">BEST VALUE</div>
-                </div>
-                <div class="shop-item" onclick="buyTickets(15)">
-                    <div class="item-icon">🎫🎫🎫</div>
-                    <div class="item-name">15 TICKETS</div>
-                    <div class="item-price">$500</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Badges Window -->
-    <div class="game-window" id="badgesWindow">
-        <div class="window-header">
-            <span class="window-title">🎨 STAR BADGES</span>
-            <button class="window-close" onclick="closeWindow('badgesWindow')">×</button>
-        </div>
-        <div class="window-content">
-            <div class="badges-grid" id="badgesGrid">
-                <!-- Badges loaded by game engine -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Auth Window -->
-    <div class="game-window" id="authWindow">
-        <div class="window-header">
-            <span class="window-title">🔐 PLAYER LOGIN</span>
-            <button class="window-close" onclick="closeWindow('authWindow')">×</button>
-        </div>
-        <div class="window-content">
-            <div class="auth-tabs">
-                <button class="auth-tab active" onclick="switchAuthTab('login')">LOGIN</button>
-                <button class="auth-tab" onclick="switchAuthTab('register')">REGISTER</button>
-            </div>
-
-            <!-- Login Form -->
-            <div id="loginForm" class="auth-form active">
-                <div class="form-group">
-                    <label>Email:</label>
-                    <input type="email" id="loginEmail" class="form-input" placeholder="player@nextstar.com">
-                </div>
-                <div class="form-group">
-                    <label>Password:</label>
-                    <input type="password" id="loginPassword" class="form-input" placeholder="••••••••">
-                </div>
-                <button class="auth-btn" onclick="login()">🚀 LOGIN & PLAY</button>
-            </div>
-
-            <!-- Register Form -->
-            <div id="registerForm" class="auth-form">
-                <div class="form-group">
-                    <label>Player Name:</label>
-                    <input type="text" id="registerName" class="form-input" placeholder="Star Warrior">
-                </div>
-                <div class="form-group">
-                    <label>Email:</label>
-                    <input type="email" id="registerEmail" class="form-input" placeholder="player@nextstar.com">
-                </div>
-                <div class="form-group">
-                    <label>Password:</label>
-                    <input type="password" id="registerPassword" class="form-input" placeholder="••••••••">
-                </div>
-                <div class="form-group">
-                    <label>Confirm Password:</label>
-                    <input type="password" id="registerConfirm" class="form-input" placeholder="••••••••">
-                </div>
-                <button class="auth-btn" onclick="register()">⭐ CREATE ACCOUNT</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Profile Window -->
-    <div class="game-window large" id="profileWindow">
-        <div class="window-header">
-            <span class="window-title">👤 PLAYER PROFILE</span>
-            <button class="window-close" onclick="closeWindow('profileWindow')">×</button>
-        </div>
-        <div class="window-content">
-            <div class="profile-header">
-                <div class="profile-avatar" id="profileAvatar">🚀</div>
-                <div class="profile-info">
-                    <h2 id="profileName">Guest Player</h2>
-                    <div class="profile-level">
-                        <span class="level-label">LEVEL</span>
-                        <span class="level-value" id="profileLevel">1</span>
-                    </div>
-                    <div class="profile-xp">
-                        <div class="xp-bar">
-                            <div class="xp-progress" id="xpProgress" style="width: 0%"></div>
-                        </div>
-                        <span class="xp-text" id="xpText">0/100 XP</span>
+            <div class="profile-content">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">🚀</div>
+                    <div class="profile-info">
+                        <h2 id="profileName">Guest Player</h2>
+                        <div>Level <span id="profileLevel">1</span></div>
                     </div>
                 </div>
-            </div>
-
-            <div class="profile-stats-grid">
-                <div class="profile-stat">
-                    <div class="stat-icon">🎫</div>
-                    <div class="stat-value" id="profileTickets">0</div>
-                    <div class="stat-label">Tickets</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="stat-icon">🏢</div>
-                    <div class="stat-value" id="profileVentures">0</div>
-                    <div class="stat-label">Ventures</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="stat-icon">📈</div>
-                    <div class="stat-value" id="profileEquity">0%</div>
-                    <div class="stat-label">Equity</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="stat-icon">⭐</div>
-                    <div class="stat-value" id="profileBadges">0</div>
-                    <div class="stat-label">Badges</div>
-                </div>
-            </div>
-
-            <div class="profile-actions">
-                <h3>PLAYER ACTIONS</h3>
-                <div class="action-buttons">
-                    <button class="action-btn" onclick="openWindow('shopWindow'); closeWindow('profileWindow');">
-                        <span class="btn-icon">🛒</span>
-                        Buy Tickets
-                    </button>
-                    <button class="action-btn" onclick="openWindow('badgesWindow'); closeWindow('profileWindow');">
-                        <span class="btn-icon">🎨</span>
-                        View Badges
-                    </button>
-                    <button class="action-btn" onclick="openWindow('portfolioWindow'); closeWindow('profileWindow');">
-                        <span class="btn-icon">📊</span>
-                        Portfolio
-                    </button>
-                    <button class="action-btn logout" onclick="logout()">
-                        <span class="btn-icon">🚪</span>
-                        Logout
-                    </button>
-                </div>
-            </div>
-
-            <div class="recent-activity">
-                <h3>RECENT ACTIVITY</h3>
-                <div class="activity-list" id="activityList">
-                    <!-- Activity items loaded dynamically -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-            <!-- Simple Shares Window -->
-            <div class="game-window" id="sharesWindow" style="width: 500px;">
-                <div class="window-header">
-                    <span class="window-title">📊 MY SHARES</span>
-                    <button class="window-close" onclick="closeWindow('sharesWindow')">×</button>
-                </div>
-                <div class="window-content">
-                    <div class="shares-summary">
-                        <div class="summary-card">
-                            <div class="summary-value" id="totalShares">0</div>
-                            <div class="summary-label">TOTAL SHARES</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-value" id="totalValue">$0</div>
-                            <div class="summary-label">PORTFOLIO VALUE</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-value" id="totalProjects">0</div>
-                            <div class="summary-label">ACTIVE PROJECTS</div>
-                        </div>
-                            </div>
-                    
-                    <h4 style="color: #00ff88; margin: 15px 0 10px 0;">SHARES BREAKDOWN</h4>
-                    <div class="simple-table-container">
-                        <table class="simple-table">
-                            <thead>
-                                <tr>
-                                    <th>PROJECT</th>
-                                    <th>SHARES</th>
-                                    <th>VALUE</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sharesTable">
-                                <!-- Shares will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Simple Projects Window -->
-            <div class="game-window" id="projectsWindow" style="width: 500px;">
-                <div class="window-header">
-                    <span class="window-title">🚀 ACTIVE PROJECTS</span>
-                    <button class="window-close" onclick="closeWindow('projectsWindow')">×</button>
-                </div>
-                <div class="window-content">
-                    <div class="project-cards" id="projectsList">
-                        <!-- Projects will be loaded here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Simple Leaderboard Window -->
-            <div class="game-window" id="leaderboardWindow" style="width: 600px;">
-                <div class="window-header">
-                    <span class="window-title">🏆 PLAYER RANKINGS</span>
-                    <button class="window-close" onclick="closeWindow('leaderboardWindow')">×</button>
-                </div>
-                <div class="window-content">
-                    <div class="leaderboard-filters">
-                        <button class="filter-btn active" onclick="sortLeaderboard('shares')">BY SHARES</button>
-                        <button class="filter-btn" onclick="sortLeaderboard('value')">BY VALUE</button>
-                        <button class="filter-btn" onclick="sortLeaderboard('projects')">BY PROJECTS</button>
-                    </div>
                 
-                    <div class="simple-table-container">
-                        <table class="simple-table">
-                            <thead>
-                                <tr>
-                                    <th>RANK</th>
-                                    <th>PLAYER</th>
-                                    <th>SHARES</th>
-                                    <th>VALUE</th>
-                                    <th>PROJECTS</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaderboardTable">
-                                <!-- Leaderboard will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="xp-progress">
+                    <div class="xp-progress-bar" id="xpProgress" style="width: 0%"></div>
+                </div>
+                <div id="xpText" style="text-align: center; margin-bottom: 20px;">0/100 XP</div>
                 
-                    <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 0.9em;">
-                        <span>Your Rank: <strong id="playerRank">-</strong></span>
-                        <span>Total Players: <strong id="totalPlayers">0</strong></span>
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="profileTickets">5</div>
+                        <div class="stat-label">Tickets</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="profileVentures">0</div>
+                        <div class="stat-label">Ventures</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="profileEquity">0%</div>
+                        <div class="stat-label">Total Equity</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="profileBadges">0</div>
+                        <div class="stat-label">Badges</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <h3 style="color: var(--parrot-accent); margin-bottom: 15px;">Recent Activity</h3>
+                    <div id="activityList">
+                        <!-- Activity will be loaded here -->
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
-    <!-- Load in this order -->
+
+    <div class="window" id="leaderboardWindow">
+        <div class="window-header">
+            <div class="window-title">Leaderboard</div>
+            <div class="window-controls">
+                <div class="window-control minimize" onclick="minimizeWindow('leaderboardWindow')"></div>
+                <div class="window-control maximize" onclick="toggleMaximize('leaderboardWindow')"></div>
+                <div class="window-control close" onclick="closeWindow('leaderboardWindow')"></div>
+            </div>
+        </div>
+        <div class="window-content">
+            <div style="padding: 20px; text-align: center;">
+                <div class="terminal-window">
+                    <div class="terminal-prompt">$ loading leaderboard...</div>
+                    <div>Coming Soon!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop and Settings Windows (simplified) -->
+    <div class="window" id="shopWindow">
+        <div class="window-header">
+            <div class="window-title">Star Shop</div>
+            <div class="window-controls">
+                <div class="window-control close" onclick="closeWindow('shopWindow')"></div>
+            </div>
+        </div>
+        <div class="window-content">
+            <div style="padding: 20px; text-align: center;">
+                <h3 style="color: var(--parrot-accent); margin-bottom: 20px;">Purchase Star Tickets</h3>
+                <button class="join-btn" onclick="gameEngine.buyTickets(5)" style="margin-bottom: 10px;">
+                    Buy 5 Tickets - 100 Stars
+                </button>
+                <button class="join-btn" onclick="gameEngine.buyTickets(10)">
+                    Buy 10 Tickets - 180 Stars
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="window" id="settingsWindow">
+        <div class="window-header">
+            <div class="window-title">Settings</div>
+            <div class="window-controls">
+                <div class="window-control close" onclick="closeWindow('settingsWindow')"></div>
+            </div>
+        </div>
+        <div class="window-content">
+            <div style="padding: 20px;">
+                <h3 style="color: var(--parrot-accent); margin-bottom: 20px;">Game Settings</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Theme:</label>
+                    <select style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid var(--parrot-border); color: white; border-radius: 5px;">
+                        <option>Dark Theme</option>
+                        <option>Light Theme</option>
+                        <option>Nebula Theme</option>
+                    </select>
+                </div>
+                <!-- Add more settings as needed -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="{% static 'js/game-engine.js' %}"></script>
-    <script src="{% static 'js/window-manager.js' %}"></script>
-    <script src="{% static 'js/auth-manager.js' %}"></script>
-    <script src="{% static 'js/maze-race.js' %}"></script>
-    <script src="{% static 'js/3d-world.js' %}"></script>
-    <script src="{% static 'js/simple-data.js' %}"></script>
-    <script src="{% static 'js/infinite-maze.js' %}"></script>
-    <script src="{% static 'js/eternal-maze.js' %}"></script>
-    <script src="{% static 'js/ceo-matrix.js' %}"></script>
-
-
+    
     <script>
-        // Initialize everything when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Starting Next Star Game...');
+        // Window Management
+        let activeWindow = null;
+        let zIndex = 100;
 
-            // Initialize game engine first
-            window.gameEngine = new GameEngine();
-            gameEngine.init();
-
-            // Then initialize other systems
-            window.windowManager = new WindowManager();
-            window.authManager = new AuthManager();
-            //window.dataManager = new DataManager(); // Add this line
-
-            // Initialize 3D world last (optional)
-            try {
-                window.gameWorld = new GameWorld3D();
-            } catch (e) {
-                console.log('⚠️ 3D World not available:', e.message);
+        function openWindow(windowId) {
+            const window = document.getElementById(windowId);
+            if (window) {
+                // Close current active window if it's the same
+                if (activeWindow === windowId) {
+                    closeWindow(windowId);
+                    return;
+                }
+                
+                // Bring to front
+                zIndex++;
+                window.style.zIndex = zIndex;
+                window.style.display = 'flex';
+                activeWindow = windowId;
+                
+                // Update dock active state
+                document.querySelectorAll('.dock-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                event.target.classList.add('active');
             }
-
-            console.log('🎉 All systems initialized!');
-        });
-    </script>
-    <script>
-        function startSimpleMaze() {
-            console.log('🎮 Starting maze race...');
-
-            // Check if everything is loaded
-            if (!window.gameEngine) {
-                console.error('❌ Game engine not found');
-                mazeRace.showNotification('❌ Game engine not loaded', 'error');
-                return;
-            }
-
-            if (!gameEngine.isInitialized) {
-                console.error('❌ Game engine not initialized');
-                mazeRace.showNotification('🔄 Game still loading...', 'error');
-                return;
-            }
-
-            // Start the maze
-            mazeRace.start();
         }
-    </script>
 
-    <script>
-        // Simple window functions
-function openSharesWindow() {
-    if (!window.gameEngine || !gameEngine.isInitialized) {
-        gameEngine.showNotification('Game not ready yet', 'error');
-        return;
-    }
+        function closeWindow(windowId) {
+            const window = document.getElementById(windowId);
+            if (window) {
+                window.style.display = 'none';
+                if (activeWindow === windowId) {
+                    activeWindow = null;
+                }
+            }
+        }
 
-    if (window.authManager && authManager.currentUser.isGuest) {
-        gameEngine.showNotification('Please login to view shares', 'error');
-        openWindow('authWindow');
-        return;
-    }
+        function minimizeWindow(windowId) {
+            const window = document.getElementById(windowId);
+            if (window) {
+                window.style.display = 'none';
+            }
+        }
 
-    loadSharesData();
-    openWindow('sharesWindow');
-}
+        function toggleMaximize(windowId) {
+            const window = document.getElementById(windowId);
+            if (window) {
+                window.classList.toggle('maximized');
+            }
+        }
 
-function openProjectsWindow() {
-    loadProjectsData();
-    openWindow('projectsWindow');
-}
+        // Make windows draggable
+        function makeDraggable(windowId) {
+            const window = document.getElementById(windowId);
+            const header = window.querySelector('.window-header');
+            
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            
+            header.onmousedown = dragMouseDown;
+            
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // get the mouse cursor position at startup:
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                // call a function whenever the cursor moves:
+                document.onmousemove = elementDrag;
+            }
+            
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // calculate the new cursor position:
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                // set the element's new position:
+                window.style.top = (window.offsetTop - pos2) + "px";
+                window.style.left = (window.offsetLeft - pos1) + "px";
+            }
+            
+            function closeDragElement() {
+                // stop moving when mouse button is released:
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
 
-function openLeaderboardWindow() {
-    loadLeaderboardData('shares');
-    openWindow('leaderboardWindow');
-}
+        // Initialize draggable windows
+        document.addEventListener('DOMContentLoaded', function() {
+            const windows = document.querySelectorAll('.window');
+            windows.forEach(window => {
+                makeDraggable(window.id);
+            });
+        });
 
-function loadSharesData() {
-    const shares = simpleData.getPlayerShares();
-    
-    // Update summary
-    document.getElementById('totalShares').textContent = shares.total.toLocaleString();
-    document.getElementById('totalValue').textContent = `$${shares.value.toLocaleString()}`;
-    document.getElementById('totalProjects').textContent = shares.projects;
-    
-    // Update table
-    const table = document.getElementById('sharesTable');
-    
-    if (gameEngine.player.ventures.length === 0) {
-        table.innerHTML = `
-            <tr>
-                <td colspan="3" style="text-align: center; color: #666; padding: 20px;">
-                    No shares yet. Join ventures to earn shares!
-                </td>
-            </tr>
-        `;
-        return;
-    }
+        // Three.js Animation
+        function initThreeJS() {
+            const canvas = document.getElementById('gameCanvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            
+            // Create particles
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 5000;
+            
+            const posArray = new Float32Array(particlesCount * 3);
+            
+            for(let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 100;
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            // Material
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.02,
+                color: 0x00ff88,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            // Points mesh
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+            
+            camera.position.z = 2;
+            
+            // Mouse movement effect
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            document.addEventListener('mousemove', (event) => {
+                mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            });
+            
+            // Animation
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                particlesMesh.rotation.x += 0.001;
+                particlesMesh.rotation.y += 0.001;
+                
+                // Mouse interaction
+                particlesMesh.rotation.x += mouseY * 0.0001;
+                particlesMesh.rotation.y += mouseX * 0.0001;
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Handle resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
 
-    table.innerHTML = gameEngine.player.ventures.map(venture => `
-        <tr>
-            <td>${venture.name}</td>
-            <td>${Math.round(venture.equity * 100).toLocaleString()}</td>
-            <td>$${venture.value.toLocaleString()}</td>
-        </tr>
-    `).join('');
-}
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.getElementById('notificationContainer').appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
 
-function loadProjectsData() {
-    const projectsList = document.getElementById('projectsList');
-    
-    projectsList.innerHTML = simpleData.projects.map(project => `
-        <div class="project-card">
-            <div class="project-header">
-                <div class="project-icon">${project.icon}</div>
-                <div class="project-title">${project.name}</div>
-                <div class="status-badge status-active">ACTIVE</div>
-            </div>
-            <div style="color: #ccc; font-size: 0.9em; margin-bottom: 10px;">
-                CEO: ${project.ceo} • ${project.funded.toLocaleString()}/${project.shares.toLocaleString()} shares
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${project.progress}%"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.8em; color: #ccc; margin-top: 5px;">
-                <span>Progress: ${project.progress}%</span>
-                <span>Value: $${(project.value / 1000).toFixed(0)}K</span>
-            </div>
-        </div>
-    `).join('');
-}
+        // Global auth function
+        function openAuthOrProfile() {
+            if (authManager.currentUser.isGuest) {
+                window.location.href = 'login.html';
+            } else {
+                authManager.loadProfileData();
+                openWindow('profileWindow');
+            }
+        }
 
-function loadLeaderboardData(sortBy = 'shares') {
-    // Update active filter
-    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-    event?.target?.classList.add('active');
-    
-    const players = simpleData.getLeaderboard(sortBy);
-    const currentPlayer = window.authManager?.currentUser?.name;
-    
-    const table = document.getElementById('leaderboardTable');
-    table.innerHTML = players.map((player, index) => {
-        const isCurrent = player.name === currentPlayer;
-        return `
-            <tr ${isCurrent ? 'style="background: rgba(0, 255, 136, 0.1);"' : ''}>
-                <td>#${index + 1}</td>
-                <td>${player.name} ${isCurrent ? ' (You)' : ''}</td>
-                <td>${player.shares.toLocaleString()}</td>
-                <td>$${player.value.toLocaleString()}</td>
-                <td>${player.projects}</td>
-            </tr>
-        `;
-    }).join('');
-    
-    // Update stats
-    document.getElementById('playerRank').textContent = `#${simpleData.getPlayerRank()}`;
-    document.getElementById('totalPlayers').textContent = players.length;
-}
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+            }, 2000);
+            
+            // Initialize Three.js
+            initThreeJS();
+            
+            // Initialize game engine
+            if (typeof gameEngine !== 'undefined') {
+                gameEngine.init();
+            }
+            
+            // Initialize auth manager
+            if (typeof authManager !== 'undefined') {
+                authManager.init();
+            }
+            
+            // Open ventures window by default
+            setTimeout(() => {
+                openWindow('ventureWindow');
+            }, 500);
+        });
 
-function sortLeaderboard(sortBy) {
-    loadLeaderboardData(sortBy);
-}
-    </script>
-    <script>
-        function startInfiniteMaze() {
-    console.log('🎮 Starting Infinite Maze...');
-    
-    if (!window.gameEngine || !gameEngine.isInitialized) {
-        console.error('Game engine not ready');
-        return;
-    }
-    
-    infiniteMaze.start();
-}
-    </script>
-    <script>
-        function startEternalMaze() {
-    if (!window.gameEngine || !gameEngine.isInitialized) {
-        return;
-    }
-    
-    eternalMaze.start();
-}
-    </script>
-    <script>
-        function startCEOMatrix() {
-    if (!window.gameEngine || !gameEngine.isInitialized) {
-        return;
-    }
-    
-    // Check if player has minimum ventures
-    if (gameEngine.player.ventures.length < 3) {
-        ceoMatrix.showNotification("❌ Complete 3+ ventures to unlock CEO Matrix", "error");
-        return;
-    }
-    
-    ceoMatrix.start();
-}
+        // Export functions to global scope
+        window.openWindow = openWindow;
+        window.closeWindow = closeWindow;
+        window.minimizeWindow = minimizeWindow;
+        window.toggleMaximize = toggleMaximize;
+        window.showNotification = showNotification;
+        window.openAuthOrProfile = openAuthOrProfile;
     </script>
 </body>
 </html>

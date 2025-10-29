@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-i(z8z$2%kt7rdmy#)gbv!&0x&*8rb%-stn)owt#y0)^37)f@ah
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['next-draw.onrender.com', '127.0.0.1']
 
 
 # Application definition
@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'gameEngine',
+    'web3',
 ]
 
 MIDDLEWARE = [

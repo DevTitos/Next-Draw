@@ -11,7 +11,31 @@ from django.utils import timezone
 import json
 from django.db import models
 from .models import PlayerProfile, Venture, PlayerVenture, Activity, PlayerBadge, Badge
+from web3.models import UserWallet
+from hiero_sdk_python import (
+    AccountId,
+)
+import logging
+from hiero.utils import create_new_account
+from hiero.ft import associate_token
 
+logger = logging.getLogger(__name__)
+
+def assign_user_wallet(name):
+    """Optimized wallet assignment with better error handling"""
+    try:
+        recipient_id, recipient_private_key, new_account_public_key = create_new_account(name)
+        associate_token(recipient_id, recipient_private_key)
+        
+        return {
+            'status': 'success',
+            'new_account_public_key': new_account_public_key,
+            'recipient_private_key': recipient_private_key,
+            'recipient_id': recipient_id
+        }
+    except Exception as e:
+        logger.error(f"Wallet assignment error: {e}")
+        return {'status': 'failed', 'error': str(e)}
 # API Views
 # Template rendering views
 def landing_page(request):
@@ -85,12 +109,31 @@ def api_register(request):
                 'success': False,
                 'error': 'Email already exists'
             }, status=400)
-
+        try:
+            # Create wallet first (more expensive operation)
+            wallet_response = assign_user_wallet(name=f"{username}")
+            
+            if wallet_response['status'] != 'success':
+                return JsonResponse({
+                'success': False,
+                'error': 'Wallet Creation Failed!'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'{e}'
+            }, status=400)
         # Create user
         user = User.objects.create_user(
             username=username,
             email=email,
             password=password
+        )
+        wallet = UserWallet.objects.create(
+            user=user,
+            public_key=wallet_response['new_account_public_key'],
+            private_key=wallet_response['recipient_private_key'],
+            recipient_id=wallet_response['recipient_id']
         )
 
         # PlayerProfile is automatically created via signal
@@ -279,6 +322,15 @@ def traditional_register(request):
         
         if User.objects.filter(email=email).exists():
             errors.append('Email already exists')
+        
+        try:
+            # Create wallet first (more expensive operation)
+            wallet_response = assign_user_wallet(name=f"{username}")
+            
+            if wallet_response['status'] != 'success':
+                errors.append('Wallet Creation Failed')
+        except Exception as e:
+            errors.append(f'{e}')
 
         if not errors:
             try:
@@ -286,6 +338,12 @@ def traditional_register(request):
                     username=username,
                     email=email,
                     password=password
+                )
+                UserWallet.objects.create(
+                    user=user,
+                    public_key=wallet_response['new_account_public_key'],
+                    private_key=wallet_response['recipient_private_key'],
+                    recipient_id=wallet_response['recipient_id']
                 )
                 login(request, user)
                 return redirect('gaming')

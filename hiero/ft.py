@@ -132,14 +132,14 @@ def create_token_fungible_finite():
     # In this example, we set up a default empty token create transaction, then set the values
     transaction = (
         TokenCreateTransaction()
-        .set_token_name("ASTRAL TOKEN")
-        .set_token_symbol("ASTRA")
+        .set_token_name("NOVA")
+        .set_token_symbol("NOVA")
         .set_decimals(2)
         .set_initial_supply(100000000)  # TokenType.FUNGIBLE_COMMON must have >0 initial supply. Cannot exceed max supply
         .set_treasury_account_id(operator_id) # Also known as treasury account
         .set_token_type(TokenType.FUNGIBLE_COMMON)
         .set_supply_type(SupplyType.FINITE)
-        .set_max_supply(1000000000)
+        .set_max_supply(10000000000)
         .set_admin_key(admin_key)
         .set_supply_key(supply_key)
         .set_freeze_key(freeze_key)
@@ -180,6 +180,3 @@ def setup_client():
     client.set_operator(operator_id, operator_key)
     
     return client, operator_id, operator_key
-
-#associate_token(recipient_id_new=nbl_id, recipient_key_new=nbl_key)
-#transfer_tokens(recipient_id=nbl_id, amount=1000000)

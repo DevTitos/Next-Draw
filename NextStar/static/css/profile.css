@@ -1,0 +1,667 @@
+/* Profile Window Styles */
+#profileWindow {
+    width: 800px;
+    height: 700px;
+}
+
+.profile-container {
+    padding: 20px;
+}
+
+/* Profile Header */
+.profile-header {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--parrot-border);
+}
+
+.profile-avatar-section {
+    text-align: center;
+}
+
+.profile-avatar-large {
+    font-size: 4rem;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    border: 3px solid var(--parrot-accent);
+}
+
+.avatar-controls {
+    margin-top: 10px;
+}
+
+.avatar-btn {
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    color: var(--parrot-text);
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.avatar-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+}
+
+.profile-info-section {
+    flex: 1;
+}
+
+.profile-name {
+    color: var(--parrot-accent);
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+}
+
+.profile-level {
+    color: var(--parrot-text);
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.profile-join-date {
+    color: var(--parrot-text-secondary);
+    margin-bottom: 15px;
+}
+
+.profile-stats-quick {
+    display: flex;
+    gap: 20px;
+}
+
+.quick-stat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+
+.quick-stat .stat-icon {
+    font-size: 1.1rem;
+}
+
+.quick-stat .stat-value {
+    font-weight: bold;
+    color: var(--parrot-accent);
+}
+
+/* XP Section */
+.xp-section {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.xp-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.xp-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.xp-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--parrot-accent), var(--parrot-accent-secondary));
+    transition: width 0.5s ease;
+}
+
+.xp-next-level {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--parrot-text-secondary);
+}
+
+/* Profile Tabs */
+.profile-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--parrot-border);
+}
+
+.profile-tab {
+    background: transparent;
+    border: none;
+    padding: 12px 20px;
+    color: var(--parrot-text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.profile-tab.active {
+    color: var(--parrot-accent);
+    border-bottom-color: var(--parrot-accent);
+}
+
+.profile-tab:hover:not(.active) {
+    color: var(--parrot-text);
+}
+
+.profile-tab-content {
+    display: none;
+}
+
+.profile-tab-content.active {
+    display: block;
+}
+
+/* Overview Tab */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stat-card .stat-icon {
+    font-size: 2rem;
+}
+
+.stat-card .stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--parrot-accent);
+    margin-bottom: 2px;
+}
+
+.stat-card .stat-label {
+    font-size: 0.9rem;
+    color: var(--parrot-text-secondary);
+}
+
+.recent-activity-preview {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.recent-activity-preview h3 {
+    color: var(--parrot-accent);
+    margin-bottom: 15px;
+}
+
+.activity-preview-list {
+    margin-bottom: 15px;
+}
+
+.activity-preview-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.activity-preview-item:last-child {
+    border-bottom: none;
+}
+
+.preview-icon {
+    font-size: 1.1rem;
+}
+
+.preview-text {
+    font-size: 0.9rem;
+    color: var(--parrot-text);
+}
+
+.view-all-btn {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    color: var(--parrot-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.view-all-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+}
+
+/* Ventures Tab */
+.ventures-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.ventures-header h3 {
+    color: var(--parrot-accent);
+    margin: 0;
+}
+
+.portfolio-summary {
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid var(--parrot-accent);
+    border-radius: 20px;
+    padding: 8px 15px;
+    color: var(--parrot-accent);
+    font-weight: bold;
+}
+
+.venture-portfolio-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.venture-portfolio-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.venture-icon {
+    font-size: 2rem;
+}
+
+.venture-details {
+    flex: 1;
+}
+
+.venture-name {
+    color: var(--parrot-accent);
+    margin-bottom: 5px;
+    font-size: 1.1rem;
+}
+
+.venture-meta {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.venture-type {
+    color: var(--parrot-text-secondary);
+}
+
+.venture-equity {
+    color: var(--parrot-accent);
+    font-weight: bold;
+}
+
+.venture-value {
+    color: var(--parrot-text);
+    font-size: 0.9rem;
+}
+
+.venture-actions {
+    text-align: center;
+}
+
+.venture-performance {
+    font-size: 1.5rem;
+}
+
+.venture-performance.positive {
+    color: #00ff88;
+}
+
+.venture-performance.neutral {
+    color: #ffaa00;
+}
+
+/* Badges Tab */
+.badges-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.badges-header h3 {
+    color: var(--parrot-accent);
+    margin: 0;
+}
+
+.badges-summary {
+    color: var(--parrot-text-secondary);
+}
+
+.badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.badge-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.badge-card.common {
+    border-left: 4px solid #00ff88;
+}
+
+.badge-card.rare {
+    border-left: 4px solid #0099ff;
+}
+
+.badge-card.epic {
+    border-left: 4px solid #ff00ff;
+}
+
+.badge-card.legendary {
+    border-left: 4px solid #ffaa00;
+}
+
+.badge-icon {
+    font-size: 2.5rem;
+}
+
+.badge-content {
+    flex: 1;
+}
+
+.badge-name {
+    color: var(--parrot-accent);
+    margin-bottom: 5px;
+    font-size: 1.1rem;
+}
+
+.badge-description {
+    color: var(--parrot-text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.badge-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.badge-rarity {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.badge-rarity.common {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--parrot-accent);
+}
+
+.badge-rarity.rare {
+    background: rgba(0, 153, 255, 0.2);
+    color: #0099ff;
+}
+
+.badge-rarity.epic {
+    background: rgba(255, 0, 255, 0.2);
+    color: #ff00ff;
+}
+
+.badge-rarity.legendary {
+    background: rgba(255, 170, 0, 0.2);
+    color: #ffaa00;
+}
+
+.badge-date {
+    font-size: 0.8rem;
+    color: var(--parrot-text-secondary);
+}
+
+/* Activity Tab */
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.activity-header h3 {
+    color: var(--parrot-accent);
+    margin: 0;
+}
+
+.refresh-btn {
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    color: var(--parrot-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-description {
+    color: var(--parrot-text);
+    margin-bottom: 5px;
+}
+
+.activity-time {
+    color: var(--parrot-text-secondary);
+    font-size: 0.8rem;
+}
+
+/* Settings Tab */
+.settings-section {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.settings-section h3 {
+    color: var(--parrot-accent);
+    margin-bottom: 15px;
+}
+
+.setting-group {
+    margin-bottom: 15px;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--parrot-text);
+    font-weight: 500;
+}
+
+.setting-input {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    color: var(--parrot-text);
+    font-size: 0.9rem;
+}
+
+.setting-input:focus {
+    outline: none;
+    border-color: var(--parrot-accent);
+}
+
+.setting-toggle {
+    margin-bottom: 15px;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    color: var(--parrot-text);
+}
+
+.toggle-label input {
+    display: none;
+}
+
+.toggle-slider {
+    width: 40px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: var(--parrot-text);
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s ease;
+}
+
+.toggle-label input:checked + .toggle-slider {
+    background: var(--parrot-accent);
+}
+
+.toggle-label input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+    background: #000;
+}
+
+.save-btn {
+    padding: 12px 25px;
+    background: var(--parrot-accent);
+    border: none;
+    border-radius: 5px;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--parrot-text-secondary);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    color: var(--parrot-text);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+
+    .profile-stats-quick {
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .badges-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-tabs {
+        flex-wrap: wrap;
+    }
+
+    .venture-portfolio-item {
+        flex-direction: column;
+        text-align: center;
+    }
+}

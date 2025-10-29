@@ -10,4 +10,5 @@ urlpatterns = [
     path('accounts/logout/', views.logout_view, name='logout'),
     path('api/auth/logout/', views.api_logout, name='api_logout'),
     path('', include('gameEngine.urls')),
+    path('', include('web3.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

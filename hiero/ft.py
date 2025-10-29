@@ -21,8 +21,8 @@ import re
 operator_id = AccountId.from_string(os.getenv('OPERATOR_ID'))
 operator_key = PrivateKey.from_string_ed25519(os.getenv('OPERATOR_KEY'))
 token_id = TokenId.from_string(os.getenv('Token_ID'))
-nbl_id = AccountId.from_string(os.getenv('NBL_ID'))
-nbl_key = PrivateKey.from_string_ed25519(os.getenv('NBL_KEY'))
+nbl_id = None#AccountId.from_string(os.getenv('NBL_ID'))
+nbl_key = None#PrivateKey.from_string_ed25519(os.getenv('NBL_KEY'))
 
 def fund_pool(recipient_id, amount, account_private_key):
     network = Network(network='testnet')

@@ -1,0 +1,44 @@
+/* CEO Matrix Styles */
+.ceo-phase button:hover {
+    background: rgba(0, 255, 136, 0.1) !important;
+    border-color: #00ff88 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
+}
+
+.ceo-phase button:active {
+    transform: translateY(0);
+}
+
+/* CEO Score Animation */
+@keyframes scorePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.ceo-phase {
+    animation: scorePulse 3s infinite;
+}
+
+/* Matrix Background Effects */
+#ceoMatrixContainer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        linear-gradient(45deg, 
+            transparent 0%, 
+            rgba(0, 255, 136, 0.02) 50%, 
+            transparent 100%);
+    animation: matrixFlow 10s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes matrixFlow {
+    0% { transform: translateX(-100%) translateY(-100%); }
+    100% { transform: translateX(100%) translateY(100%); }
+}

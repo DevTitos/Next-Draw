@@ -1,0 +1,21 @@
+/* Infinite Maze Styles */
+.maze-layer button:hover {
+    background: rgba(0, 255, 136, 0.1) !important;
+    border-color: #00ff88 !important;
+    transform: translateY(-2px);
+}
+
+.maze-layer button:active {
+    transform: translateY(0);
+}
+
+/* Maze Progress Animation */
+@keyframes layerPulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+.maze-layer {
+    animation: layerPulse 2s infinite;
+}

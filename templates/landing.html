@@ -1,0 +1,364 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next Star - Where Gaming Meets Real Venture Ownership</title>
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <h1>NEXT STAR</h1>
+                <span>AFRICAN VENTURE GAME</span>
+            </div>
+            <div class="nav-links">
+                <a href="#vision">Vision</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#games">Games</a>
+                <a href="#economics">Economics</a>
+                <a href="#technology">Technology</a>
+                <a href="#roadmap">Roadmap</a>
+                <button class="cta-nav" onclick="enterGame()">ENTER GAME</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background" id="heroCanvas"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <span class="title-line">WHERE GAMING MEETS</span>
+                <span class="title-line">REAL VENTURE OWNERSHIP</span>
+            </h1>
+            <p class="hero-subtitle">
+                Next Star transforms African entrepreneurs into gaming champions. 
+                Every strategic move builds real companies. Every victory earns real equity.
+            </p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-number" id="venturesFunded">47</div>
+                    <div class="stat-label">VENTURES FUNDED</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="playersActive">2,847</div>
+                    <div class="stat-label">ACTIVE PLAYERS</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="totalEquity">$2.8M</div>
+                    <div class="stat-label">COMMUNITY EQUITY</div>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <button class="btn-primary" onclick="enterGame()">
+                    🚀 START YOUR JOURNEY
+                </button>
+                <button class="btn-secondary" onclick="scrollToSection('how-it-works')">
+                    💡 LEARN MORE
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vision Section -->
+    <section id="vision" class="vision">
+        <div class="container">
+            <h2>THE VISION: DEMOCRATIZING VENTURE OWNERSHIP</h2>
+            <div class="vision-grid">
+                <div class="vision-card">
+                    <div class="vision-icon">🌍</div>
+                    <h3>African Innovation</h3>
+                    <p>Unleash Africa's entrepreneurial potential through gamified venture creation. Every player becomes an innovation catalyst.</p>
+                </div>
+                <div class="vision-card">
+                    <div class="vision-icon">🎮</div>
+                    <h3>Play-to-Own</h3>
+                    <p>Transform gaming from entertainment to economic empowerment. Your strategic skills build real companies with real ownership.</p>
+                </div>
+                <div class="vision-card">
+                    <div class="vision-icon">🤝</div>
+                    <h3>Community Powered</h3>
+                    <p>Collective intelligence funds and scales African startups. The community votes, the community owns, the community benefits.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2>HOW NEXT STAR WORKS</h2>
+            <div class="process-flow">
+                <div class="process-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>ACQUIRE STAR TICKETS</h3>
+                        <p>Purchase Star Tickets - your universal key to venture competitions. Each ticket gives equal participation power.</p>
+                    </div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>JOIN VENTURE ARENAS</h3>
+                        <p>Enter strategic competitions across technology, agriculture, energy, and finance sectors. Solve real African challenges.</p>
+                    </div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>SUBMIT WINNING STRATEGIES</h3>
+                        <p>Develop and submit comprehensive business solutions. The most viable strategy wins CEO position with 20% equity.</p>
+                    </div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>EARN COLLECTIVE OWNERSHIP</h3>
+                        <p>All participants share 80% equity proportional to their participation. Build a diversified portfolio of African startups.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Games Section -->
+    <section id="games" class="games">
+        <div class="container">
+            <h2>STRATEGIC GAMING EXPERIENCES</h2>
+            <div class="games-grid">
+                <div class="game-card">
+                    <div class="game-header">
+                        <div class="game-icon">⚔️</div>
+                        <h3>VENTURE ARENA</h3>
+                    </div>
+                    <div class="game-content">
+                        <p>Compete in business strategy battles. Submit comprehensive solutions to real African market challenges.</p>
+                        <ul>
+                            <li>Real business case studies</li>
+                            <li>Community voting system</li>
+                            <li>CEO selection process</li>
+                            <li>Equity distribution</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-header">
+                        <div class="game-icon">🏢</div>
+                        <h3>CEO MATRIX</h3>
+                    </div>
+                    <div class="game-content">
+                        <p>The ultimate leadership test. Only strategic masterminds with long-term vision can achieve Star CEO status.</p>
+                        <ul>
+                            <li>7-phase CEO mastery test</li>
+                            <li>Real-time strategic scoring</li>
+                            <li>Long-term vision assessment</li>
+                            <li>Star CEO achievement</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-header">
+                        <div class="game-icon">🌀</div>
+                        <h3>INFINITE MAZE</h3>
+                    </div>
+                    <div class="game-content">
+                        <p>Navigate an endless strategic labyrinth. Find the single break point through persistent problem-solving.</p>
+                        <ul>
+                            <li>Infinite loop structure</li>
+                            <li>0.1% escape probability</li>
+                            <li>Time-based rewards</li>
+                            <li>Strategic persistence test</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Economics Section -->
+    <section id="economics" class="economics">
+        <div class="container">
+            <h2>REAL ECONOMICS, REAL OWNERSHIP</h2>
+            <div class="economics-content">
+                <div class="economics-model">
+                    <h3>EQUITY DISTRIBUTION MODEL</h3>
+                    <div class="equity-breakdown">
+                        <div class="equity-item">
+                            <div class="equity-role">WINNING PLAYER</div>
+                            <div class="equity-percent">20%</div>
+                            <div class="equity-desc">Becomes CEO with operational control and founder equity</div>
+                        </div>
+                        <div class="equity-item">
+                            <div class="equity-role">ALL PARTICIPANTS</div>
+                            <div class="equity-percent">80%</div>
+                            <div class="equity-desc">Shared proportionally based on participation and performance</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="token-economics">
+                    <h3>STAR TICKET ECONOMICS</h3>
+                    <div class="token-features">
+                        <div class="token-feature">
+                            <strong>Universal Access:</strong> Each ticket grants equal participation rights
+                        </div>
+                        <div class="token-feature">
+                            <strong>No Speculation:</strong> Tickets are participation tools, not investment vehicles
+                        </div>
+                        <div class="token-feature">
+                            <strong>Transparent Pricing:</strong> Fixed $50 per ticket, bulk discounts available
+                        </div>
+                        <div class="token-feature">
+                            <strong>Revenue Allocation:</strong> 70% to prize pools, 30% to platform development
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section id="technology" class="technology">
+        <div class="container">
+            <h2>BLOCKCHAIN-POWERED TRANSPARENCY</h2>
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <div class="tech-icon">⛓️</div>
+                    <h3>Hedera Hashgraph</h3>
+                    <p>Enterprise-grade blockchain for fast, secure, carbon-negative transactions. Perfect for equity distribution and NFT management.</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🎨</div>
+                    <h3>NFT Certificates</h3>
+                    <p>Every Star Ticket and ownership stake is a unique NFT with African cultural artwork and full ownership history.</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🏛️</div>
+                    <h3>DAO Governance</h3>
+                    <p>Community-controlled decision making. Token holders vote on venture funding, platform updates, and strategic direction.</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🔍</div>
+                    <h3>Transparent Ledger</h3>
+                    <p>Every transaction, equity distribution, and venture decision is permanently recorded and publicly verifiable.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roadmap Section -->
+    <section id="roadmap" class="roadmap">
+        <div class="container">
+            <h2>OUR JOURNEY AHEAD</h2>
+            <div class="roadmap-timeline">
+                <div class="timeline-phase current">
+                    <div class="phase-marker"></div>
+                    <div class="phase-content">
+                        <h3>PHASE 1: LAUNCH</h3>
+                        <div class="phase-date">Q1 2025</div>
+                        <ul>
+                            <li>Platform MVP Launch</li>
+                            <li>First 10 Venture Competitions</li>
+                            <li>Basic NFT Integration</li>
+                            <li>Community Foundation</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="timeline-phase">
+                    <div class="phase-marker"></div>
+                    <div class="phase-content">
+                        <h3>PHASE 2: SCALE</h3>
+                        <div class="phase-date">Q3 2025</div>
+                        <ul>
+                            <li>Mobile App Launch</li>
+                            <li>Advanced Gaming Features</li>
+                            <li>DAO Governance Implementation</li>
+                            <li>100+ Active Ventures</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="timeline-phase">
+                    <div class="phase-marker"></div>
+                    <div class="phase-content">
+                        <h3>PHASE 3: EXPAND</h3>
+                        <div class="phase-date">Q1 2026</div>
+                        <ul>
+                            <li>Pan-African Expansion</li>
+                            <li>Venture Success Stories</li>
+                            <li>Secondary Market Launch</li>
+                            <li>10,000+ Active Players</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-final">
+        <div class="container">
+            <h2>READY TO BECOME AFRICA'S NEXT STAR?</h2>
+            <p>Join thousands of players building real companies through strategic gaming.</p>
+            <div class="cta-actions">
+                <button class="btn-primary large" onclick="enterGame()">
+                    🚀 ENTER THE GAME
+                </button>
+                <button class="btn-secondary large" onclick="openWhitepaper()">
+                    📖 READ WHITEPAPER
+                </button>
+            </div>
+            <div class="social-proof">
+                <div class="testimonial">
+                    "Next Star transformed my gaming passion into real business ownership. I'm now CEO of Solar Africa!"
+                    <div class="testimonial-author">- Titos K., Nairobi</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>NEXT STAR</h3>
+                    <p>Democratizing venture ownership through strategic gaming.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>QUICK LINKS</h4>
+                    <a href="#vision">Vision</a>
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="#games">Games</a>
+                    <a href="#economics">Economics</a>
+                </div>
+                <div class="footer-section">
+                    <h4>COMMUNITY</h4>
+                    <a href="#">Discord</a>
+                    <a href="#">Twitter</a>
+                    <a href="#">Telegram</a>
+                    <a href="#">Blog</a>
+                </div>
+                <div class="footer-section">
+                    <h4>LEGAL</h4>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Whitepaper</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Next Star. All rights reserved. Building Africa's future, one game at a time.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/landing.js' %}"></script>
+</body>
+</html>

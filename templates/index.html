@@ -1,0 +1,555 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next Star - 3D Venture Game</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/maze.css' %}">
+    <link rel="stylesheet" href="{% static 'css/eternal-maze.css' %}">
+    <link rel="stylesheet" href="{% static 'css/ceo-matrix.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dao.css' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+</head>
+<body>
+    <!-- Game Container -->
+    <div id="gameContainer">
+        <!-- 3D Game Canvas -->
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- Game HUD -->
+        <div id="gameHUD">
+            <!-- Player Stats -->
+            <div class="hud-stats">
+                <div class="stat">
+                    <div class="stat-icon">🎫</div>
+                    <div class="stat-value" id="ticketCount">5</div>
+                    <div class="stat-label">TICKETS</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">🏢</div>
+                    <div class="stat-value" id="ventureCount">3</div>
+                    <div class="stat-label">VENTURES</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="equityPercent">12%</div>
+                    <div class="stat-label">EQUITY</div>
+                </div>
+            </div>
+
+            <!-- Updated HUD Controls -->
+            <div class="hud-controls">
+                <button class="hud-btn" onclick="openWindow('arenaWindow')">⚔️ ARENA</button>
+                <button class="hud-btn" onclick="openWindow('portfolioWindow')">📊 PORTFOLIO</button>
+                <button class="hud-btn" onclick="openWindow('sharesWindow')">📈 SHARES</button>
+                <button class="hud-btn" onclick="openWindow('projectsWindow')">🚀 PROJECTS</button>
+                <button class="hud-btn" onclick="openWindow('leaderboardWindow')">🏆 RANKINGS</button>
+                <button class="hud-btn" onclick="startEternalMaze()">🌀 ETERNAL MAZE</button>
+                <button class="hud-btn" onclick="startCEOMatrix()">🏢 CEO MATRIX</button>
+                <button class="hud-btn" onclick="startInfiniteMaze()">🌀 INFINITE MAZE</button>
+                <button class="hud-btn" onclick="openWindow('shopWindow')">🛒 SHOP</button>
+                <button class="hud-btn" onclick="openWindow('badgesWindow')">🎨 BADGES</button>
+                <button class="hud-btn" id="authHudBtn" onclick="openAuthOrProfile()">👤 LOGIN</button>
+            </div>
+        </div>
+
+        <!-- Updated Window Definitions -->
+<div id="gameWindows">
+    <!-- Arena Window - Larger -->
+    <div class="game-window large" id="arenaWindow">
+        <div class="window-header">
+            <span class="window-title">⚔️ VENTURE ARENA</span>
+            <button class="window-close" onclick="closeWindow('arenaWindow')">×</button>
+        </div>
+        <div class="window-content">
+            <div class="game-grid" id="ventureGrid">
+                <!-- Ventures loaded by game engine -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Window - Larger -->
+    <div class="game-window large" id="portfolioWindow">
+        <div class="window-header">
+            <span class="window-title">📊 MY PORTFOLIO</span>
+            <button class="window-close" onclick="closeWindow('portfolioWindow')">×</button>
+        </div>
+        <div class="window-content">
+            <div class="portfolio-grid" id="portfolioGrid">
+                <!-- Portfolio items loaded by game engine -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop Window -->
+    <div class="game-window" id="shopWindow">
+        <div class="window-header">
+            <span class="window-title">🛒 STAR TICKET SHOP</span>
+            <button class="window-close" onclick="closeWindow('shopWindow')">×</button>
+        </div>
+        <div class="window-content">
+            <div class="shop-items">
+                <div class="shop-item" onclick="buyTickets(1)">
+                    <div class="item-icon">🎫</div>
+                    <div class="item-name">1 TICKET</div>
+                    <div class="item-price">$50</div>
+                </div>
+                <div class="shop-item featured" onclick="buyTickets(5)">
+                    <div class="item-icon">🎫🎫🎫🎫🎫</div>
+                    <div class="item-name">5 TICKETS</div>
+                    <div class="item-price">$200</div>
+                    <div class="item-bonus">BEST VALUE</div>
+                </div>
+                <div class="shop-item" onclick="buyTickets(15)">
+                    <div class="item-icon">🎫🎫🎫</div>
+                    <div class="item-name">15 TICKETS</div>
+                    <div class="item-price">$500</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Badges Window -->
+    <div class="game-window" id="badgesWindow">
+        <div class="window-header">
+            <span class="window-title">🎨 STAR BADGES</span>
+            <button class="window-close" onclick="closeWindow('badgesWindow')">×</button>
+        </div>
+        <div class="window-content">
+            <div class="badges-grid" id="badgesGrid">
+                <!-- Badges loaded by game engine -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Window -->
+    <div class="game-window" id="authWindow">
+        <div class="window-header">
+            <span class="window-title">🔐 PLAYER LOGIN</span>
+            <button class="window-close" onclick="closeWindow('authWindow')">×</button>
+        </div>
+        <div class="window-content">
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">LOGIN</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">REGISTER</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="player@nextstar.com">
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="••••••••">
+                </div>
+                <button class="auth-btn" onclick="login()">🚀 LOGIN & PLAY</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label>Player Name:</label>
+                    <input type="text" id="registerName" class="form-input" placeholder="Star Warrior">
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="registerEmail" class="form-input" placeholder="player@nextstar.com">
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="registerPassword" class="form-input" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password:</label>
+                    <input type="password" id="registerConfirm" class="form-input" placeholder="••••••••">
+                </div>
+                <button class="auth-btn" onclick="register()">⭐ CREATE ACCOUNT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Window -->
+    <div class="game-window large" id="profileWindow">
+        <div class="window-header">
+            <span class="window-title">👤 PLAYER PROFILE</span>
+            <button class="window-close" onclick="closeWindow('profileWindow')">×</button>
+        </div>
+        <div class="window-content">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">🚀</div>
+                <div class="profile-info">
+                    <h2 id="profileName">Guest Player</h2>
+                    <div class="profile-level">
+                        <span class="level-label">LEVEL</span>
+                        <span class="level-value" id="profileLevel">1</span>
+                    </div>
+                    <div class="profile-xp">
+                        <div class="xp-bar">
+                            <div class="xp-progress" id="xpProgress" style="width: 0%"></div>
+                        </div>
+                        <span class="xp-text" id="xpText">0/100 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-stats-grid">
+                <div class="profile-stat">
+                    <div class="stat-icon">🎫</div>
+                    <div class="stat-value" id="profileTickets">0</div>
+                    <div class="stat-label">Tickets</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="stat-icon">🏢</div>
+                    <div class="stat-value" id="profileVentures">0</div>
+                    <div class="stat-label">Ventures</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="profileEquity">0%</div>
+                    <div class="stat-label">Equity</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-value" id="profileBadges">0</div>
+                    <div class="stat-label">Badges</div>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <h3>PLAYER ACTIONS</h3>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="openWindow('shopWindow'); closeWindow('profileWindow');">
+                        <span class="btn-icon">🛒</span>
+                        Buy Tickets
+                    </button>
+                    <button class="action-btn" onclick="openWindow('badgesWindow'); closeWindow('profileWindow');">
+                        <span class="btn-icon">🎨</span>
+                        View Badges
+                    </button>
+                    <button class="action-btn" onclick="openWindow('portfolioWindow'); closeWindow('profileWindow');">
+                        <span class="btn-icon">📊</span>
+                        Portfolio
+                    </button>
+                    <button class="action-btn logout" onclick="logout()">
+                        <span class="btn-icon">🚪</span>
+                        Logout
+                    </button>
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h3>RECENT ACTIVITY</h3>
+                <div class="activity-list" id="activityList">
+                    <!-- Activity items loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+            <!-- Simple Shares Window -->
+            <div class="game-window" id="sharesWindow" style="width: 500px;">
+                <div class="window-header">
+                    <span class="window-title">📊 MY SHARES</span>
+                    <button class="window-close" onclick="closeWindow('sharesWindow')">×</button>
+                </div>
+                <div class="window-content">
+                    <div class="shares-summary">
+                        <div class="summary-card">
+                            <div class="summary-value" id="totalShares">0</div>
+                            <div class="summary-label">TOTAL SHARES</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-value" id="totalValue">$0</div>
+                            <div class="summary-label">PORTFOLIO VALUE</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-value" id="totalProjects">0</div>
+                            <div class="summary-label">ACTIVE PROJECTS</div>
+                        </div>
+                            </div>
+                    
+                    <h4 style="color: #00ff88; margin: 15px 0 10px 0;">SHARES BREAKDOWN</h4>
+                    <div class="simple-table-container">
+                        <table class="simple-table">
+                            <thead>
+                                <tr>
+                                    <th>PROJECT</th>
+                                    <th>SHARES</th>
+                                    <th>VALUE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sharesTable">
+                                <!-- Shares will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simple Projects Window -->
+            <div class="game-window" id="projectsWindow" style="width: 500px;">
+                <div class="window-header">
+                    <span class="window-title">🚀 ACTIVE PROJECTS</span>
+                    <button class="window-close" onclick="closeWindow('projectsWindow')">×</button>
+                </div>
+                <div class="window-content">
+                    <div class="project-cards" id="projectsList">
+                        <!-- Projects will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simple Leaderboard Window -->
+            <div class="game-window" id="leaderboardWindow" style="width: 600px;">
+                <div class="window-header">
+                    <span class="window-title">🏆 PLAYER RANKINGS</span>
+                    <button class="window-close" onclick="closeWindow('leaderboardWindow')">×</button>
+                </div>
+                <div class="window-content">
+                    <div class="leaderboard-filters">
+                        <button class="filter-btn active" onclick="sortLeaderboard('shares')">BY SHARES</button>
+                        <button class="filter-btn" onclick="sortLeaderboard('value')">BY VALUE</button>
+                        <button class="filter-btn" onclick="sortLeaderboard('projects')">BY PROJECTS</button>
+                    </div>
+                
+                    <div class="simple-table-container">
+                        <table class="simple-table">
+                            <thead>
+                                <tr>
+                                    <th>RANK</th>
+                                    <th>PLAYER</th>
+                                    <th>SHARES</th>
+                                    <th>VALUE</th>
+                                    <th>PROJECTS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardTable">
+                                <!-- Leaderboard will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                
+                    <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 0.9em;">
+                        <span>Your Rank: <strong id="playerRank">-</strong></span>
+                        <span>Total Players: <strong id="totalPlayers">0</strong></span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <!-- Load in this order -->
+    <script src="{% static 'js/game-engine.js' %}"></script>
+    <script src="{% static 'js/window-manager.js' %}"></script>
+    <script src="{% static 'js/auth-manager.js' %}"></script>
+    <script src="{% static 'js/maze-race.js' %}"></script>
+    <script src="{% static 'js/3d-world.js' %}"></script>
+    <script src="{% static 'js/simple-data.js' %}"></script>
+    <script src="{% static 'js/infinite-maze.js' %}"></script>
+    <script src="{% static 'js/eternal-maze.js' %}"></script>
+    <script src="{% static 'js/ceo-matrix.js' %}"></script>
+
+
+    <script>
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Starting Next Star Game...');
+
+            // Initialize game engine first
+            window.gameEngine = new GameEngine();
+            gameEngine.init();
+
+            // Then initialize other systems
+            window.windowManager = new WindowManager();
+            window.authManager = new AuthManager();
+            //window.dataManager = new DataManager(); // Add this line
+
+            // Initialize 3D world last (optional)
+            try {
+                window.gameWorld = new GameWorld3D();
+            } catch (e) {
+                console.log('⚠️ 3D World not available:', e.message);
+            }
+
+            console.log('🎉 All systems initialized!');
+        });
+    </script>
+    <script>
+        function startSimpleMaze() {
+            console.log('🎮 Starting maze race...');
+
+            // Check if everything is loaded
+            if (!window.gameEngine) {
+                console.error('❌ Game engine not found');
+                mazeRace.showNotification('❌ Game engine not loaded', 'error');
+                return;
+            }
+
+            if (!gameEngine.isInitialized) {
+                console.error('❌ Game engine not initialized');
+                mazeRace.showNotification('🔄 Game still loading...', 'error');
+                return;
+            }
+
+            // Start the maze
+            mazeRace.start();
+        }
+    </script>
+
+    <script>
+        // Simple window functions
+function openSharesWindow() {
+    if (!window.gameEngine || !gameEngine.isInitialized) {
+        gameEngine.showNotification('Game not ready yet', 'error');
+        return;
+    }
+
+    if (window.authManager && authManager.currentUser.isGuest) {
+        gameEngine.showNotification('Please login to view shares', 'error');
+        openWindow('authWindow');
+        return;
+    }
+
+    loadSharesData();
+    openWindow('sharesWindow');
+}
+
+function openProjectsWindow() {
+    loadProjectsData();
+    openWindow('projectsWindow');
+}
+
+function openLeaderboardWindow() {
+    loadLeaderboardData('shares');
+    openWindow('leaderboardWindow');
+}
+
+function loadSharesData() {
+    const shares = simpleData.getPlayerShares();
+    
+    // Update summary
+    document.getElementById('totalShares').textContent = shares.total.toLocaleString();
+    document.getElementById('totalValue').textContent = `$${shares.value.toLocaleString()}`;
+    document.getElementById('totalProjects').textContent = shares.projects;
+    
+    // Update table
+    const table = document.getElementById('sharesTable');
+    
+    if (gameEngine.player.ventures.length === 0) {
+        table.innerHTML = `
+            <tr>
+                <td colspan="3" style="text-align: center; color: #666; padding: 20px;">
+                    No shares yet. Join ventures to earn shares!
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    table.innerHTML = gameEngine.player.ventures.map(venture => `
+        <tr>
+            <td>${venture.name}</td>
+            <td>${Math.round(venture.equity * 100).toLocaleString()}</td>
+            <td>$${venture.value.toLocaleString()}</td>
+        </tr>
+    `).join('');
+}
+
+function loadProjectsData() {
+    const projectsList = document.getElementById('projectsList');
+    
+    projectsList.innerHTML = simpleData.projects.map(project => `
+        <div class="project-card">
+            <div class="project-header">
+                <div class="project-icon">${project.icon}</div>
+                <div class="project-title">${project.name}</div>
+                <div class="status-badge status-active">ACTIVE</div>
+            </div>
+            <div style="color: #ccc; font-size: 0.9em; margin-bottom: 10px;">
+                CEO: ${project.ceo} • ${project.funded.toLocaleString()}/${project.shares.toLocaleString()} shares
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${project.progress}%"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8em; color: #ccc; margin-top: 5px;">
+                <span>Progress: ${project.progress}%</span>
+                <span>Value: $${(project.value / 1000).toFixed(0)}K</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function loadLeaderboardData(sortBy = 'shares') {
+    // Update active filter
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    event?.target?.classList.add('active');
+    
+    const players = simpleData.getLeaderboard(sortBy);
+    const currentPlayer = window.authManager?.currentUser?.name;
+    
+    const table = document.getElementById('leaderboardTable');
+    table.innerHTML = players.map((player, index) => {
+        const isCurrent = player.name === currentPlayer;
+        return `
+            <tr ${isCurrent ? 'style="background: rgba(0, 255, 136, 0.1);"' : ''}>
+                <td>#${index + 1}</td>
+                <td>${player.name} ${isCurrent ? ' (You)' : ''}</td>
+                <td>${player.shares.toLocaleString()}</td>
+                <td>$${player.value.toLocaleString()}</td>
+                <td>${player.projects}</td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Update stats
+    document.getElementById('playerRank').textContent = `#${simpleData.getPlayerRank()}`;
+    document.getElementById('totalPlayers').textContent = players.length;
+}
+
+function sortLeaderboard(sortBy) {
+    loadLeaderboardData(sortBy);
+}
+    </script>
+    <script>
+        function startInfiniteMaze() {
+    console.log('🎮 Starting Infinite Maze...');
+    
+    if (!window.gameEngine || !gameEngine.isInitialized) {
+        console.error('Game engine not ready');
+        return;
+    }
+    
+    infiniteMaze.start();
+}
+    </script>
+    <script>
+        function startEternalMaze() {
+    if (!window.gameEngine || !gameEngine.isInitialized) {
+        return;
+    }
+    
+    eternalMaze.start();
+}
+    </script>
+    <script>
+        function startCEOMatrix() {
+    if (!window.gameEngine || !gameEngine.isInitialized) {
+        return;
+    }
+    
+    // Check if player has minimum ventures
+    if (gameEngine.player.ventures.length < 3) {
+        ceoMatrix.showNotification("❌ Complete 3+ ventures to unlock CEO Matrix", "error");
+        return;
+    }
+    
+    ceoMatrix.start();
+}
+    </script>
+</body>
+</html>

@@ -294,7 +294,8 @@
             <div class="error-message" id="errorMessage"></div>
             <div class="success-message" id="successMessage"></div>
 
-            <form id="registerForm">
+            <form id="registerForm" method="post" action="{% url 'traditional_register' %}">
+                {% csrf_token %}
                 <div class="form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username" class="form-control" placeholder="Choose a username" required>

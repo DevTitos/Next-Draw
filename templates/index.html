@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/maze.css' %}">
+    <link rel="stylesheet" href="{% static 'css/start-menu.css' %}">
     <title>Next Star - Gaming Platform</title>
     <style>
         * {
@@ -572,9 +574,6 @@
         <div class="dock-item" onclick="openWindow('profileWindow')" title="Profile">
             👤
         </div>
-        <div class="dock-item" onclick="openWindow('leaderboardWindow')" title="Leaderboard">
-            🏆
-        </div>
         <div class="dock-item" onclick="openWindow('shopWindow')" title="Shop">
             🛒
         </div>
@@ -582,6 +581,145 @@
             ⚙️
         </div>
     </div>
+
+
+
+    <!-- Start Menu -->
+    <div class="start-menu" id="startMenu">
+        <div class="start-menu-header">
+            <div class="user-info">
+                <div class="user-avatar" id="startMenuAvatar">🚀</div>
+                <div class="user-details">
+                    <div class="user-name" id="startMenuName">Guest Player</div>
+                    <div class="user-level">Level <span id="startMenuLevel">1</span></div>
+                </div>
+            </div>
+            <div class="quick-stats">
+                <div class="quick-stat">
+                    <span class="stat-icon">🎫</span>
+                    <span class="stat-value" id="startMenuTickets">5</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-value" id="startMenuStars">100</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="stat-icon">📈</span>
+                    <span class="stat-value" id="startMenuEquity">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="start-menu-content">
+            <!-- Search Bar -->
+            <div class="search-section">
+                <div class="search-container">
+                    <input type="text" id="startMenuSearch" placeholder="Search ventures, players, features..." class="search-input">
+                    <div class="search-icon">🔍</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Grid -->
+            <div class="quick-actions-grid">
+                <div class="quick-action" onclick="openWindow('profileWindow'); hideStartMenu();">
+                    <div class="action-icon">👤</div>
+                    <div class="action-label">Profile</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('ventureWindow'); hideStartMenu();">
+                    <div class="action-icon">⚔️</div>
+                    <div class="action-label">Ventures</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('portfolioWindow'); hideStartMenu();">
+                    <div class="action-icon">📊</div>
+                    <div class="action-label">Portfolio</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('eternalMazeWindow'); setTimeout(() => mazeEngine.init(), 100); hideStartMenu();">
+                    <div class="action-icon">🌌</div>
+                    <div class="action-label">Eternal Maze</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('walletWindow'); hideStartMenu();">
+                    <div class="action-icon">💰</div>
+                    <div class="action-label">Wallet</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('nftWindow'); hideStartMenu();">
+                    <div class="action-icon">🖼️</div>
+                    <div class="action-label">NFT Tickets</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('sharesWindow'); hideStartMenu();">
+                    <div class="action-icon">📈</div>
+                    <div class="action-label">Shares</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('leaderboardWindow'); hideStartMenu();">
+                    <div class="action-icon">🏆</div>
+                    <div class="action-label">Leaderboard</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('shopWindow'); hideStartMenu();">
+                    <div class="action-icon">🛒</div>
+                    <div class="action-label">Shop</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('settingsWindow'); hideStartMenu();">
+                    <div class="action-icon">⚙️</div>
+                    <div class="action-label">Settings</div>
+                </div>
+                <div class="quick-action" onclick="openWindow('faqWindow'); hideStartMenu();">
+                    <div class="action-icon">❓</div>
+                    <div class="action-label">FAQ & Help</div>
+                </div>
+                <div class="quick-action" onclick="showNotifications(); hideStartMenu();">
+                    <div class="action-icon">🔔</div>
+                    <div class="action-label">Notifications</div>
+                    <div class="notification-badge" id="notificationCount">3</div>
+                </div>
+            </div>
+
+            <!-- Recent Ventures -->
+            <div class="recent-section">
+                <h3 class="section-title">Recent Ventures</h3>
+                <div class="recent-list" id="recentVenturesList">
+                    <!-- Recent ventures will be populated here -->
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-section">
+                <h3 class="section-title">Quick Stats</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="quickVenturesJoined">0</div>
+                        <div class="stat-label">Ventures Joined</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="quickTotalEquity">0%</div>
+                        <div class="stat-label">Total Equity</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="quickBadgesEarned">0</div>
+                        <div class="stat-label">Badges Earned</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="quickDaysActive">1</div>
+                        <div class="stat-label">Days Active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="start-menu-footer">
+            <button class="logout-btn" onclick="handleLogout(); hideStartMenu();">🚪 Logout</button>
+            <div class="footer-info">
+                <span>Next Star v1.0</span>
+                <span>•</span>
+                <span id="currentTime">00:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Menu Trigger -->
+    <div class="start-menu-trigger" onclick="toggleStartMenu()">
+        <div class="start-icon">⭐</div>
+    </div>
+
+
 
     <!-- Windows -->
     <div class="window" id="ventureWindow">
@@ -732,12 +870,279 @@
         </div>
     </div>
 
+    <!-- Eternal Maze Window -->
+    <div class="window" id="eternalMazeWindow">
+        <div class="window-header">
+            <div class="window-title">🌌 Eternal Maze - The Matrix</div>
+            <div class="window-controls">
+                <div class="window-control minimize" onclick="minimizeWindow('eternalMazeWindow')"></div>
+                <div class="window-control maximize" onclick="toggleMaximize('eternalMazeWindow'); mazeEngine.handleResize();"></div>
+                <div class="window-control close" onclick="closeWindow('eternalMazeWindow')"></div>
+            </div>
+        </div>
+        <div class="window-content" style="padding: 0; position: relative; overflow: hidden;">
+            <!-- Stats Panel - Top Left -->
+            <div class="maze-panel stats-panel">
+                <div class="panel-title">Maze Status</div>
+                <div class="stat-row">
+                    <span class="stat-label">Level:</span>
+                    <span class="stat-value" id="mazeLevel">1</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Moves:</span>
+                    <span class="stat-value" id="mazeMoves">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Time:</span>
+                    <span class="stat-value" id="mazeTime">00:00</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Patterns:</span>
+                    <span class="stat-value" id="patternsFound">0/7</span>
+                </div>
+            </div>
+
+            <!-- Controls Panel - Top Right -->
+            <div class="maze-panel controls-panel">
+                <div class="panel-title">Controls</div>
+                <button onclick="mazeEngine.resetMaze()" class="maze-btn">Reset Maze</button>
+                <button onclick="mazeEngine.showHint()" class="maze-btn">Hint (5⭐)</button>
+                <button onclick="mazeEngine.activateStrategyMode()" class="maze-btn strategy-btn">Strategy Mode</button>
+            </div>
+
+            <!-- Strategy Panel - Bottom Left (Initially Hidden) -->
+            <div class="maze-panel strategy-panel" id="strategyPanel" style="display: none;">
+                <div class="panel-title">Strategic Analysis</div>
+                <div class="strategy-section">
+                    <div class="section-label">Pattern Sequence:</div>
+                    <div class="sequence-display" id="patternSequence">None</div>
+                </div>
+                <div class="strategy-section">
+                    <div class="section-label">Available Patterns:</div>
+                    <div class="patterns-display" id="availablePatterns">None collected</div>
+                </div>
+                <button onclick="mazeEngine.executeStrategicMove()" class="maze-btn execute-btn">Execute Strategic Move</button>
+            </div>
+
+            <!-- Instructions Panel - Bottom Right -->
+            <div class="maze-panel instructions-panel">
+                <div class="panel-title">Instructions</div>
+                <div class="instruction-text">
+                    <strong>Arrow Keys:</strong> Move through maze<br>
+                    <strong>Find 7 Patterns:</strong> Hidden throughout maze<br>
+                    <strong>Strategy Mode:</strong> Unlocks with patterns<br>
+                    <strong>Goal:</strong> Reach the exit using strategy
+                </div>
+            </div>
+
+            <!-- Maze Canvas - Takes remaining space -->
+            <div class="maze-container">
+                <canvas id="mazeCanvas"></canvas>
+            </div>
+
+            <!-- Message Modal -->
+            <div class="maze-modal" id="mazeMessage" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modalTitle">Message</h3>
+                        <span class="modal-close" onclick="mazeEngine.hideMessage()">×</span>
+                    </div>
+                    <div class="modal-body" id="messageContent"></div>
+                    <div class="modal-footer">
+                        <button onclick="mazeEngine.hideMessage()" class="maze-btn">Continue</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallet Window -->
+    <div class="window" id="walletWindow">
+        <div class="window-header">
+            <div class="window-title">💰 Digital Wallet</div>
+            <div class="window-controls">
+                <div class="window-control close" onclick="closeWindow('walletWindow')"></div>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="wallet-content">
+                <div class="balance-cards">
+                    <div class="balance-card">
+                        <div class="balance-icon">⭐</div>
+                        <div class="balance-info">
+                            <div class="balance-label">Star Tokens</div>
+                            <div class="balance-amount" id="walletStars">100</div>
+                        </div>
+                    </div>
+                    <div class="balance-card">
+                        <div class="balance-icon">🎫</div>
+                        <div class="balance-info">
+                            <div class="balance-label">Venture Tickets</div>
+                            <div class="balance-amount" id="walletTickets">5</div>
+                        </div>
+                    </div>
+                    <div class="balance-card">
+                        <div class="balance-icon">💰</div>
+                        <div class="balance-info">
+                            <div class="balance-label">Game Coins</div>
+                            <div class="balance-amount" id="walletCoins">1,000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="transaction-history">
+                    <h3>Recent Transactions</h3>
+                    <div class="transaction-list" id="transactionList">
+                        <div class="transaction-item">
+                            <div class="transaction-icon">🛒</div>
+                            <div class="transaction-details">
+                                <div class="transaction-title">Ticket Purchase</div>
+                                <div class="transaction-date">Just now</div>
+                            </div>
+                            <div class="transaction-amount">-5 ⭐</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NFT Tickets Window -->
+    <div class="window" id="nftWindow">
+        <div class="window-header">
+            <div class="window-title">🖼️ NFT Tickets Collection</div>
+            <div class="window-controls">
+                <div class="window-control close" onclick="closeWindow('nftWindow')"></div>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="nft-content">
+                <div class="nft-stats">
+                    <div class="nft-stat">
+                        <div class="nft-stat-value" id="nftTotal">3</div>
+                        <div class="nft-stat-label">Total NFTs</div>
+                    </div>
+                    <div class="nft-stat">
+                        <div class="nft-stat-value" id="nftRare">1</div>
+                        <div class="nft-stat-label">Rare</div>
+                    </div>
+                    <div class="nft-stat">
+                        <div class="nft-stat-value" id="nftEpic">0</div>
+                        <div class="nft-stat-label">Epic</div>
+                    </div>
+                </div>
+
+                <div class="nft-grid">
+                    <div class="nft-card">
+                        <div class="nft-image">🎫</div>
+                        <div class="nft-info">
+                            <div class="nft-name">Starter Ticket</div>
+                            <div class="nft-rarity common">Common</div>
+                        </div>
+                    </div>
+                    <div class="nft-card">
+                        <div class="nft-image">⚡</div>
+                        <div class="nft-info">
+                            <div class="nft-name">Energy Venture Pass</div>
+                            <div class="nft-rarity rare">Rare</div>
+                        </div>
+                    </div>
+                    <div class="nft-card">
+                        <div class="nft-image">🌱</div>
+                        <div class="nft-info">
+                            <div class="nft-name">Quantum Farms Access</div>
+                            <div class="nft-rarity common">Common</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shares Window -->
+    <div class="window" id="sharesWindow">
+        <div class="window-header">
+            <div class="window-title">📈 Equity Shares</div>
+            <div class="window-controls">
+                <div class="window-control close" onclick="closeWindow('sharesWindow')"></div>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="shares-content">
+                <div class="shares-summary">
+                    <div class="total-equity">
+                        <div class="equity-label">Total Portfolio Value</div>
+                        <div class="equity-value">$<span id="totalPortfolioValue">12,450</span></div>
+                    </div>
+                    <div class="equity-breakdown">
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Venture Equity:</span>
+                            <span class="breakdown-value" id="ventureEquityValue">$10,200</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">NFT Value:</span>
+                            <span class="breakdown-value" id="nftEquityValue">$2,250</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="shares-list">
+                    <h3>Your Venture Shares</h3>
+                    <div class="shares-grid" id="sharesGrid">
+                        <!-- Shares will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Window -->
+    <div class="window" id="faqWindow">
+        <div class="window-header">
+            <div class="window-title">❓ FAQ & Help Center</div>
+            <div class="window-controls">
+                <div class="window-control close" onclick="closeWindow('faqWindow')"></div>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="faq-content">
+                <div class="faq-search">
+                    <input type="text" placeholder="Search help topics..." class="search-input">
+                </div>
+
+                <div class="faq-categories">
+                    <div class="faq-category active" data-category="getting-started">Getting Started</div>
+                    <div class="faq-category" data-category="ventures">Ventures</div>
+                    <div class="faq-category" data-category="nft">NFT Tickets</div>
+                    <div class="faq-category" data-category="maze">Eternal Maze</div>
+                </div>
+
+                <div class="faq-questions">
+                    <div class="faq-item">
+                        <div class="faq-question">How do I join a venture?</div>
+                        <div class="faq-answer">Use venture tickets to join available ventures. Each venture requires 1 ticket and gives you equity share.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">What are NFT tickets?</div>
+                        <div class="faq-answer">NFT tickets are special access passes that grant exclusive benefits and can be traded.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">How does the Eternal Maze work?</div>
+                        <div class="faq-answer">The maze requires strategic thinking and pattern recognition. Collect patterns and use Strategy Mode to escape.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Container -->
     <div id="notificationContainer"></div>
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="{% static 'js/game-engine.js' %}"></script>
+    <script src="{% static 'js/maze-engine.js' %}"></script>
+    <script src="{% static 'js/start-menu.js' %}"></script>
     
     <script>
         // Window Management

@@ -1,21 +1,348 @@
-/* Infinite Maze Styles */
-.maze-layer button:hover {
-    background: rgba(0, 255, 136, 0.1) !important;
-    border-color: #00ff88 !important;
-    transform: translateY(-2px);
+/* Maze specific styles */
+#mazeCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
-.maze-layer button:active {
-    transform: translateY(0);
+.maze-stats {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.8);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 100;
 }
 
-/* Maze Progress Animation */
-@keyframes layerPulse {
-    0% { opacity: 0.7; }
-    50% { opacity: 1; }
-    100% { opacity: 0.7; }
+.maze-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.8);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 100;
 }
 
-.maze-layer {
-    animation: layerPulse 2s infinite;
+.strategy-interface {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.8);
+    padding: 15px;
+    border-radius: 10px;
+    z-index: 100;
+}
+
+.maze-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.9);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 100;
+    border: 2px solid var(--parrot-accent);
+}
+
+/* Eternal Maze Window Styles */
+#eternalMazeWindow {
+    min-width: 800px;
+    min-height: 600px;
+    width: 90vw;
+    height: 80vh;
+    max-width: 1200px;
+    max-height: 900px;
+}
+
+#eternalMazeWindow.maximized {
+    width: 100vw !important;
+    height: calc(100vh - 40px) !important;
+    max-width: none;
+    max-height: none;
+}
+
+/* Maze Panels */
+.maze-panel {
+    position: absolute;
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 15px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    max-width: 250px;
+}
+
+.stats-panel {
+    top: 20px;
+    left: 20px;
+}
+
+.controls-panel {
+    top: 20px;
+    right: 20px;
+}
+
+.strategy-panel {
+    bottom: 20px;
+    left: 20px;
+}
+
+.instructions-panel {
+    bottom: 20px;
+    right: 20px;
+}
+
+.panel-title {
+    color: var(--parrot-accent);
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--parrot-border);
+    padding-bottom: 5px;
+}
+
+/* Stats Styles */
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 0.85rem;
+}
+
+.stat-label {
+    color: var(--parrot-text-secondary);
+}
+
+.stat-value {
+    color: var(--parrot-accent);
+    font-weight: bold;
+}
+
+/* Maze Container */
+.maze-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+}
+
+#mazeCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Maze Buttons */
+.maze-btn {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    color: var(--parrot-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+}
+
+.maze-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+    border-color: var(--parrot-accent);
+}
+
+.maze-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.strategy-btn {
+    background: rgba(0, 255, 136, 0.2);
+    border-color: var(--parrot-accent);
+}
+
+.execute-btn {
+    background: rgba(255, 0, 128, 0.2);
+    border-color: #ff0080;
+}
+
+/* Strategy Panel Styles */
+.strategy-section {
+    margin-bottom: 10px;
+}
+
+.section-label {
+    font-size: 0.8rem;
+    color: var(--parrot-text-secondary);
+    margin-bottom: 3px;
+}
+
+.sequence-display,
+.patterns-display {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    min-height: 20px;
+    border: 1px solid var(--parrot-border);
+}
+
+/* Instructions */
+.instruction-text {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--parrot-text-secondary);
+}
+
+/* Modal Styles */
+.maze-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--parrot-window-bg);
+    border: 2px solid var(--parrot-accent);
+    border-radius: 10px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80%;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: rgba(0, 255, 136, 0.1);
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--parrot-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    color: var(--parrot-accent);
+    margin: 0;
+}
+
+.modal-close {
+    color: var(--parrot-text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--parrot-accent);
+}
+
+.modal-body {
+    padding: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+    line-height: 1.5;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid var(--parrot-border);
+    text-align: right;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #eternalMazeWindow {
+        min-width: 95vw;
+        min-height: 70vh;
+        width: 95vw !important;
+        height: 70vh !important;
+    }
+
+    .maze-panel {
+        max-width: 200px;
+        padding: 10px;
+    }
+
+    .stats-panel,
+    .controls-panel {
+        top: 10px;
+    }
+
+    .strategy-panel,
+    .instructions-panel {
+        bottom: 10px;
+    }
+
+    .maze-btn {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .maze-panel {
+        max-width: 150px;
+        padding: 8px;
+    }
+
+    .panel-title {
+        font-size: 0.8rem;
+    }
+
+    .stat-row,
+    .instruction-text {
+        font-size: 0.75rem;
+    }
+
+    .modal-content {
+        width: 95%;
+    }
+}
+
+/* High DPI Screens */
+@media (min-resolution: 192dpi) {
+    .maze-panel {
+        padding: 20px;
+    }
+    
+    .maze-btn {
+        padding: 10px 15px;
+    }
+}
+
+/* Animation for panel appearance */
+.maze-panel {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

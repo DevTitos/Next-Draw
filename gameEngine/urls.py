@@ -24,4 +24,11 @@ urlpatterns = [
     path('api/ventures/', views.api_ventures, name='api_ventures'),
     path('api/ventures/<int:venture_id>/join/', views.api_join_venture, name='api_join_venture'),
     path('api/profile/buy_tickets/', views.api_buy_tickets, name='api_buy_tickets'),
+
+    # Ventures API Endpoint
+    path('api/game/ventures/active/', views.get_active_venture_games, name='active_venture_games'),
+    path('api/game/ventures/<int:venture_id>/join/', views.join_venture_game, name='join_venture_game'),
+    path('api/game/ventures/<int:venture_id>/maze/', views.get_venture_maze, name='get_venture_maze'),
+    path('api/game/maze/<uuid:session_id>/move/', views.make_maze_move, name='make_maze_move'),
+    path('api/game/ventures/<int:venture_id>/leaderboard/', views.venture_game_leaderboard, name='venture_game_leaderboard'),
 ]

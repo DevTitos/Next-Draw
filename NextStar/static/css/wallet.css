@@ -1,0 +1,520 @@
+/* Wallet Styles */
+.wallet-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--parrot-border);
+    margin-bottom: 20px;
+}
+
+.wallet-tab {
+    background: none;
+    border: none;
+    color: var(--parrot-text-secondary);
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.wallet-tab.active {
+    color: var(--parrot-accent);
+    border-bottom-color: var(--parrot-accent);
+}
+
+.wallet-tab-content {
+    display: none;
+}
+
+.wallet-tab-content.active {
+    display: block;
+}
+
+.balance-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.balance-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.balance-icon {
+    font-size: 2rem;
+}
+
+.balance-info {
+    flex: 1;
+}
+
+.balance-label {
+    color: var(--parrot-text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.balance-amount {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--parrot-accent);
+    margin-bottom: 5px;
+}
+
+.balance-value {
+    color: var(--parrot-text-secondary);
+    font-size: 0.8rem;
+}
+
+.wallet-actions {
+    margin-bottom: 30px;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.wallet-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 15px 10px;
+    color: var(--parrot-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.wallet-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+    transform: translateY(-2px);
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+/* Hedera Styles */
+.hedera-account-info {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: var(--parrot-text-secondary);
+}
+
+.info-value-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-value {
+    font-family: 'Courier New', monospace;
+    color: var(--parrot-accent);
+}
+
+.copy-btn {
+    background: none;
+    border: none;
+    color: var(--parrot-text-secondary);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.copy-btn:hover {
+    color: var(--parrot-accent);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.explorer-actions {
+    margin-bottom: 20px;
+}
+
+.explorer-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.explorer-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    padding: 10px 15px;
+    color: var(--parrot-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.explorer-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+}
+
+/* Buy STA Styles */
+.payment-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--parrot-border);
+    margin-bottom: 20px;
+}
+
+.payment-tab {
+    background: none;
+    border: none;
+    color: var(--parrot-text-secondary);
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.payment-tab.active {
+    color: var(--parrot-accent);
+    border-bottom-color: var(--parrot-accent);
+}
+
+.payment-method {
+    display: none;
+}
+
+.payment-method.active {
+    display: block;
+}
+
+.payment-form {
+    max-width: 400px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    color: var(--parrot-text);
+}
+
+.amount-preview {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.preview-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.preview-row.total {
+    border-top: 1px solid var(--parrot-border);
+    padding-top: 8px;
+    font-weight: bold;
+    color: var(--parrot-accent);
+}
+
+.buy-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--parrot-accent);
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.buy-btn:hover {
+    background: var(--parrot-accent-secondary);
+    transform: translateY(-2px);
+}
+
+/* Crypto Styles */
+.crypto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.crypto-option {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 15px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.crypto-option:hover {
+    border-color: var(--parrot-accent);
+    transform: translateY(-2px);
+}
+
+.crypto-option.selected {
+    background: var(--parrot-accent);
+    color: #000;
+}
+
+.crypto-icon {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.crypto-address {
+    margin-bottom: 15px;
+}
+
+.address-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 5px;
+}
+
+.crypto-warning {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid #ffc107;
+    border-radius: 5px;
+    padding: 10px;
+    color: #ffc107;
+    font-size: 0.9rem;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background: var(--parrot-window-bg);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--parrot-border);
+}
+
+.modal-close {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--parrot-text-secondary);
+}
+
+.modal-close:hover {
+    color: var(--parrot-accent);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--parrot-border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-btn.primary {
+    background: var(--parrot-accent);
+    color: #000;
+}
+
+.modal-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--parrot-text);
+}
+
+.modal-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Transaction History */
+.transactions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.transaction-filters select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    padding: 8px;
+    color: var(--parrot-text);
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.transaction-icon {
+    font-size: 1.2rem;
+}
+
+.transaction-details {
+    flex: 1;
+}
+
+.transaction-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.transaction-date {
+    color: var(--parrot-text-secondary);
+    font-size: 0.8rem;
+}
+
+.transaction-amount {
+    font-weight: bold;
+    color: var(--parrot-accent);
+}
+
+.transaction-amount.negative {
+    color: #ff6b6b;
+}
+
+.transaction-amount.positive {
+    color: var(--parrot-accent);
+}
+
+/* QR Code */
+.receive-qr {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.qr-placeholder {
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.qr-text {
+    color: var(--parrot-text-secondary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wallet-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .wallet-tab {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    .balance-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .explorer-buttons {
+        flex-direction: column;
+    }
+    
+    .crypto-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}

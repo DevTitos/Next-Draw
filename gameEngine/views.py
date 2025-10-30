@@ -10,7 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 import json
 from django.db import models
-from .models import PlayerProfile, Venture, PlayerVenture, Activity, PlayerBadge, Badge
+from .models import PlayerProfile, Venture, PlayerVenture, Activity, PlayerBadge, Badge, VentureParticipation, NFTBadge, MazeSession, HederaTransaction
 from web3.models import UserWallet
 from hiero_sdk_python import (
     AccountId,
@@ -18,7 +18,7 @@ from hiero_sdk_python import (
 import logging
 from hiero.utils import create_new_account
 from hiero.ft import associate_token
-
+import random
 logger = logging.getLogger(__name__)
 
 def assign_user_wallet(name):
@@ -795,3 +795,376 @@ def check_venture_badges(player_profile):
                 
     except Exception as e:
         print(f"Error checking badges: {e}")
+# Venture Game Views - Add these to your existing views.py
+
+@login_required
+def get_active_venture_games(request):
+    """Get active venture games for the CEO competition"""
+    try:
+        player = request.user.playerprofile
+        active_ventures = Venture.objects.filter(
+            status__in=['active', 'running']
+        ).order_by('-created_at')
+        
+        ventures_data = []
+        for venture in active_ventures:
+            has_joined = venture.participants.filter(player=player).exists()
+            
+            venture_data = {
+                'id': venture.id,
+                'name': venture.name,
+                'venture_type': venture.venture_type,
+                'icon': venture.icon,
+                'description': venture.description,
+                'status': venture.status,
+                'entry_ticket_cost': venture.entry_ticket_cost,
+                'current_participants': venture.current_participants,
+                'max_participants': venture.max_participants,
+                'maze_complexity': venture.maze_complexity,
+                'ceo_equity': venture.ceo_equity,
+                'participant_equity': venture.participant_equity,
+                'time_limit': venture.maze_time_limit,
+                'required_patterns': venture.required_patterns,
+                'hcs_topic_id': venture.hcs_topic_id,
+                'is_joinable': venture.is_joinable,
+                'hasJoined': has_joined,
+            }
+            ventures_data.append(venture_data)
+        
+        return JsonResponse({
+            'success': True,
+            'ventures': ventures_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def join_venture_game(request, venture_id):
+    """Join a venture game using tickets"""
+    try:
+        venture = get_object_or_404(Venture, id=venture_id)
+        player = request.user.playerprofile
+        
+        if not venture.is_joinable:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Venture is not currently joinable'
+            })
+        
+        if player.tickets < venture.entry_ticket_cost:
+            return JsonResponse({
+                'success': False,
+                'error': f'Not enough tickets. Need {venture.entry_ticket_cost}'
+            })
+        
+        if venture.participants.filter(player=player).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'Already joined this venture game'
+            })
+        
+        # Deduct tickets and create participation
+        player.tickets -= venture.entry_ticket_cost
+        player.total_ventures_joined += 1
+        player.save()
+        
+        participation = VentureParticipation.objects.create(
+            player=player,
+            venture=venture,
+            entry_tickets_used=venture.entry_ticket_cost
+        )
+        
+        # AUTO-START: Check if venture should start immediately
+        should_start = venture.current_participants >= 1  # Start with any players for demo
+        
+        if should_start and venture.status == 'active':
+            venture.start_venture()
+        
+        # Record Hedera transaction
+        HederaTransaction.objects.create(
+            transaction_id=f"game_join_{venture.id}_{player.id}_{int(timezone.now().timestamp())}",
+            transaction_type='venture_entry',
+            player=player,
+            venture=venture,
+            amount=venture.entry_ticket_cost,
+            from_account=player.hedera_account_id or '0.0.0',
+            to_account='0.0.0',
+            status='completed',
+            memo=f"Joined venture game: {venture.name}"
+        )
+        
+        # Create activity
+        Activity.objects.create(
+            player=player,
+            activity_type='venture_join',
+            icon='🎮',
+            description=f'Joined CEO competition: {venture.name}',
+            venture=venture
+        )
+        
+        response_data = {
+            'success': True,
+            'message': f'Successfully joined {venture.name} CEO competition!',
+            'remaining_tickets': player.tickets,
+            'venture_status': venture.status  # Return updated status
+        }
+        
+        return JsonResponse(response_data)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
+def get_venture_maze(request, venture_id):
+    """Get or create maze session for a venture game"""
+    try:
+        venture = get_object_or_404(Venture, id=venture_id)
+        player = request.user.playerprofile
+        
+        if venture.status != 'running':
+            return JsonResponse({
+                'success': False, 
+                'error': 'Venture maze is not currently running'
+            })
+        
+        # Check if player has joined
+        if not venture.participants.filter(player=player).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'You must join the venture before entering the maze'
+            })
+        
+        # Get existing active session or create new one
+        session, created = MazeSession.objects.get_or_create(
+            player=player,
+            venture=venture,
+            status='active',
+            defaults={
+                'maze_configuration': venture.generate_maze_configuration(),
+                'current_position': {'x': 0, 'y': 0},
+                'discovered_patterns': []
+            }
+        )
+        
+        # Update player's current maze session
+        player.current_maze_session = session
+        player.save()
+        
+        maze_data = {
+            'sessionId': str(session.id),
+            'ventureId': venture.id,
+            'complexity': venture.maze_complexity,
+            'timeLimit': venture.maze_time_limit,
+            'timeRemaining': session.time_remaining,
+            'currentPosition': session.current_position,
+            'movesMade': session.moves_made,
+            'patternsFound': session.patterns_found,
+            'patternsRequired': venture.required_patterns,
+            'mazeLayout': session.maze_configuration.get('layout', {}),
+            'discoveredPatterns': session.discovered_patterns,
+            'status': session.status
+        }
+        
+        return JsonResponse({
+            'success': True, 
+            'maze': maze_data
+        })
+        
+    except Exception as e:
+        print(f"Error creating maze session: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def make_maze_move(request, session_id):
+    """Process a move in the maze"""
+    try:
+        session = get_object_or_404(
+            MazeSession, 
+            id=session_id, 
+            player=request.user.playerprofile
+        )
+        
+        if session.status != 'active':
+            return JsonResponse({
+                'success': False, 
+                'error': 'Maze session is not active'
+            })
+        
+        data = json.loads(request.body)
+        direction = data.get('direction')
+        
+        if direction not in ['up', 'down', 'left', 'right']:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Invalid direction'
+            })
+        
+        # Update session time
+        session.time_elapsed = min(
+            session.time_elapsed + 1, 
+            session.maze_configuration.get('time_limit', 3600)
+        )
+        
+        # Process move (simplified - in production, implement proper maze logic)
+        session.moves_made += 1
+        
+        # Update position based on direction
+        current_x = session.current_position.get('x', 0)
+        current_y = session.current_position.get('y', 0)
+        
+        if direction == 'up':
+            session.current_position = {'x': current_x, 'y': current_y - 1}
+        elif direction == 'down':
+            session.current_position = {'x': current_x, 'y': current_y + 1}
+        elif direction == 'left':
+            session.current_position = {'x': current_x - 1, 'y': current_y}
+        elif direction == 'right':
+            session.current_position = {'x': current_x + 1, 'y': current_y}
+        
+        # Check for pattern discovery (simplified)
+        maze_layout = session.maze_configuration.get('layout', {})
+        if random.random() > 0.8:  # 20% chance to find pattern
+            session.patterns_found = min(
+                session.patterns_found + 1, 
+                session.maze_configuration.get('required_patterns', 5)
+            )
+            session.discovered_patterns.append({
+                'pattern_id': len(session.discovered_patterns) + 1,
+                'type': f'pattern_{random.randint(1, 5)}',
+                'discovered_at': timezone.now().isoformat()
+            })
+        
+        # Check if maze completed (simplified - reach end position)
+        end_pos = maze_layout.get('end', {'x': 9, 'y': 9})
+        patterns_required = session.maze_configuration.get('required_patterns', 5)
+        
+        if (session.current_position == end_pos and 
+            session.patterns_found >= patterns_required):
+            session.complete_session(success=True)
+            
+            # Check if this player is the first to complete
+            existing_winners = MazeSession.objects.filter(
+                venture=session.venture,
+                status='completed',
+                completed_at__lt=session.completed_at
+            ).exists()
+            
+            if not existing_winners:
+                # This player is the first to complete - they become CEO!
+                session.venture.complete_venture(session.player)
+        
+        session.save()
+        
+        return JsonResponse({
+            'success': True,
+            'newPosition': session.current_position,
+            'movesMade': session.moves_made,
+            'patternsFound': session.patterns_found,
+            'timeRemaining': session.time_remaining,
+            'completed': session.status == 'completed'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
+def venture_game_leaderboard(request, venture_id):
+    """Get leaderboard for a venture game"""
+    try:
+        venture = get_object_or_404(Venture, id=venture_id)
+        player = request.user.playerprofile
+        
+        # Get completed sessions ordered by completion time
+        completed_sessions = MazeSession.objects.filter(
+            venture=venture,
+            status='completed'
+        ).select_related('player').order_by('completed_at')[:10]
+        
+        leaderboard = []
+        for session in completed_sessions:
+            is_ceo = (session.player.is_ceo and 
+                     session.player.ceo_of_venture == venture)
+            
+            leaderboard.append({
+                'player': session.player.user.username,
+                'completionTime': session.time_elapsed,
+                'movesMade': session.moves_made,
+                'patternsFound': session.patterns_found,
+                'isCEO': is_ceo
+            })
+        
+        # Add current player if they're active but not completed
+        current_session = MazeSession.objects.filter(
+            venture=venture,
+            player=player,
+            status='active'
+        ).first()
+        
+        if current_session and not any(entry['player'] == player.user.username 
+                                     for entry in leaderboard):
+            leaderboard.append({
+                'player': player.user.username + ' (You)',
+                'completionTime': 'In Progress',
+                'movesMade': current_session.moves_made,
+                'patternsFound': current_session.patterns_found,
+                'isCEO': False
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'leaderboard': leaderboard
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+# Utility function to start venture games (can be called via admin or cron)
+def start_venture_game(venture_id):
+    """Start a venture game (maze competition)"""
+    try:
+        venture = Venture.objects.get(id=venture_id)
+        
+        if venture.status == 'active' and venture.current_participants > 0:
+            venture.status = 'running'
+            venture.start_time = timezone.now()
+            venture.end_time = venture.start_time + timezone.timedelta(
+                seconds=venture.maze_time_limit
+            )
+            venture.save()
+            
+            # Create HCS message for game start
+            HederaTransaction.objects.create(
+                transaction_id=f"game_start_{venture.id}_{int(timezone.now().timestamp())}",
+                transaction_type='system',
+                venture=venture,
+                from_account='0.0.0',
+                to_account='0.0.0',
+                status='completed',
+                memo=f"Venture game started: {venture.name}"
+            )
+            
+            return True
+        return False
+        
+    except Venture.DoesNotExist:
+        return False

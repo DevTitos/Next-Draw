@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="{% static 'css/start-menu.css' %}">
     <link rel="stylesheet" href="{% static 'css/governance.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/wallet.css' %}">
+    <link rel="stylesheet" href="{% static 'css/venture.css' %}">
+    <link rel="stylesheet" href="{% static 'css/matrix.css' %}">
     <title>Next Star - Gaming Platform</title>
     <style>
         * {
@@ -571,6 +574,10 @@
         <div class="dock-item" onclick="openWindow('settingsWindow')" title="Settings">
             ⚙️
         </div>
+        <div class="dock-item" onclick="matrixEngine.openDashboard()" title="Matrix CEO Games">
+            🌌
+        </div>
+
     </div>
 
 
@@ -665,6 +672,10 @@
                     <div class="action-icon">🏛️</div>
                     <div class="action-label">Governance</div>
                 </div>
+                <div class="quick-action" onclick="ventureGameEngine.openVentureGameWindow()">
+                    <div class="action-icon">🎮</div>
+                    <div class="action-label">CEO Games</div>
+                </div>
             </div>
 
             <!-- Recent Ventures -->
@@ -747,6 +758,11 @@
                 <!-- Portfolio items will be loaded here -->
             </div>
         </div>
+    </div>
+
+
+    <div class="window" id="ventureWindowsContainer">
+        <!-- Venture windows will be dynamically created here -->
     </div>
 
     <!-- Profile Window -->
@@ -971,6 +987,74 @@
         </div>
     </div>
 
+<!-- Matrix Dashboard Window -->
+<div class="window" id="matrixDashboardWindow" style="display: none;">
+    <div class="window-header">
+        <div class="window-title">🌌 Eternal Matrix - CEO Selection</div>
+        <div class="window-controls">
+            <div class="window-control minimize" onclick="minimizeWindow('matrixDashboardWindow')"></div>
+            <div class="window-control maximize" onclick="toggleMaximize('matrixDashboardWindow')"></div>
+            <div class="window-control close" onclick="closeWindow('matrixDashboardWindow')"></div>
+        </div>
+    </div>
+    <div class="window-content">
+        <div class="matrix-dashboard">
+            <div class="dashboard-header">
+                <h2>🚀 Strategic CEO Selection Matrix</h2>
+                <p>Apply for CEO positions and prove your strategic capabilities in the eternal matrix challenge</p>
+                <button class="refresh-btn" onclick="matrixEngine.loadDashboard()">
+                    🔄 Refresh Opportunities
+                </button>
+            </div>
+            
+            <div class="projects-grid" id="matrixProjectsGrid">
+                <!-- Projects will be loaded here -->
+            </div>
+            
+            <div class="game-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="activeProjectsCount">0</div>
+                        <div class="stat-label">Active Projects</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🚀</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="ceoApplicationsCount">0</div>
+                        <div class="stat-label">Your Applications</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🌌</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="matrixChallengesCount">0</div>
+                        <div class="stat-label">Matrix Challenges</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Matrix Game Window -->
+<div class="window" id="matrixGameWindow" style="display: none;">
+    <div class="window-header">
+        <div class="window-title" id="matrixGameTitle">🌌 Eternal Matrix Challenge</div>
+        <div class="window-controls">
+            <div class="window-control minimize" onclick="minimizeWindow('matrixGameWindow')"></div>
+            <div class="window-control maximize" onclick="toggleMaximize('matrixGameWindow')"></div>
+            <div class="window-control close" onclick="matrixEngine.closeMatrixGame()"></div>
+        </div>
+    </div>
+    <div class="window-content">
+        <div class="matrix-game-container">
+            <!-- Matrix game content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
     <div class="window" id="settingsWindow">
         <div class="window-header">
             <div class="window-title">Settings</div>
@@ -1081,21 +1165,34 @@
     </div>
 
     <!-- Wallet Window -->
-    <div class="window" id="walletWindow">
-        <div class="window-header">
-            <div class="window-title">💰 Digital Wallet</div>
-            <div class="window-controls">
-                <div class="window-control close" onclick="closeWindow('walletWindow')"></div>
-            </div>
+<div class="window" id="walletWindow">
+    <div class="window-header">
+        <div class="window-title">💰 Digital Wallet</div>
+        <div class="window-controls">
+            <div class="window-control minimize" onclick="minimizeWindow('walletWindow')"></div>
+            <div class="window-control maximize" onclick="toggleMaximize('walletWindow')"></div>
+            <div class="window-control close" onclick="closeWindow('walletWindow')"></div>
         </div>
-        <div class="window-content">
-            <div class="wallet-content">
+    </div>
+    <div class="window-content">
+        <div class="wallet-content">
+            <!-- Wallet Navigation Tabs -->
+            <div class="wallet-tabs">
+                <button class="wallet-tab active" onclick="walletEngine.switchTab('overview')">📊 Overview</button>
+                <button class="wallet-tab" onclick="walletEngine.switchTab('hedera')">🔗 Hedera</button>
+                <button class="wallet-tab" onclick="walletEngine.switchTab('buySTA')">⭐ Buy STA</button>
+                <button class="wallet-tab" onclick="walletEngine.switchTab('transactions')">📋 Transactions</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="wallet-tab-content active" id="walletOverviewTab">
                 <div class="balance-cards">
                     <div class="balance-card">
                         <div class="balance-icon">⭐</div>
                         <div class="balance-info">
-                            <div class="balance-label">Star Tokens</div>
+                            <div class="balance-label">Star Tokens (STA)</div>
                             <div class="balance-amount" id="walletStars">100</div>
+                            <div class="balance-value">$<span id="starsValue">10.00</span></div>
                         </div>
                     </div>
                     <div class="balance-card">
@@ -1103,6 +1200,7 @@
                         <div class="balance-info">
                             <div class="balance-label">Venture Tickets</div>
                             <div class="balance-amount" id="walletTickets">5</div>
+                            <div class="balance-value" id="ticketsValue">Active: 3</div>
                         </div>
                     </div>
                     <div class="balance-card">
@@ -1110,26 +1208,314 @@
                         <div class="balance-info">
                             <div class="balance-label">Game Coins</div>
                             <div class="balance-amount" id="walletCoins">1,000</div>
+                            <div class="balance-value">For in-game use</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="transaction-history">
-                    <h3>Recent Transactions</h3>
-                    <div class="transaction-list" id="transactionList">
-                        <div class="transaction-item">
-                            <div class="transaction-icon">🛒</div>
-                            <div class="transaction-details">
-                                <div class="transaction-title">Ticket Purchase</div>
-                                <div class="transaction-date">Just now</div>
+                <div class="wallet-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="wallet-btn" onclick="walletEngine.switchTab('buySTA')">
+                            <span class="btn-icon">💳</span>
+                            Buy STA
+                        </button>
+                        <button class="wallet-btn" onclick="walletEngine.showSendModal()">
+                            <span class="btn-icon">📤</span>
+                            Send
+                        </button>
+                        <button class="wallet-btn" onclick="walletEngine.showReceiveModal()">
+                            <span class="btn-icon">📥</span>
+                            Receive
+                        </button>
+                        <button class="wallet-btn" onclick="walletEngine.switchTab('hedera')">
+                            <span class="btn-icon">🔍</span>
+                            Hedera Explorer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hedera Tab -->
+            <div class="wallet-tab-content" id="walletHederaTab">
+                <div class="hedera-section">
+                    <h3>🔗 Hedera Network</h3>
+                    
+                    <!-- Account Information -->
+                    <div class="hedera-account-info">
+                        <div class="info-row">
+                            <span class="info-label">Account ID:</span>
+                            <div class="info-value-container">
+                                <span class="info-value" id="hederaAccountId">0.0.1234567</span>
+                                <button class="copy-btn" onclick="walletEngine.copyToClipboard('hederaAccountId')" title="Copy Account ID">
+                                    📋
+                                </button>
                             </div>
-                            <div class="transaction-amount">-5 ⭐</div>
                         </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Recipient ID:</span>
+                            <div class="info-value-container">
+                                <span class="info-value" id="hederaRecipientId">{{ user.hedera_recipient_id|default:"0.0.0000000" }}</span>
+                                <button class="copy-btn" onclick="walletEngine.copyToClipboard('hederaRecipientId')" title="Copy Recipient ID">
+                                    📋
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Network:</span>
+                            <span class="info-value">Hedera Mainnet</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Balance:</span>
+                            <span class="info-value"><span id="hederaBalance">0</span> HBAR</span>
+                        </div>
+                    </div>
+
+                    <!-- Explorer Actions -->
+                    <div class="explorer-actions">
+                        <h4>View on Explorer</h4>
+                        <div class="explorer-buttons">
+                            <button class="explorer-btn" onclick="walletEngine.openExplorer('account')">
+                                View Account
+                            </button>
+                            <button class="explorer-btn" onclick="walletEngine.openExplorer('transactions')">
+                                View Transactions
+                            </button>
+                            <button class="explorer-btn" onclick="walletEngine.openExplorer('tokens')">
+                                View STA Token
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Hedera Transactions -->
+                    <div class="hedera-transactions">
+                        <h4>Recent Hedera Transactions</h4>
+                        <div class="transaction-list" id="hederaTransactionList">
+                            <!-- Hedera transactions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buy STA Tab -->
+            <div class="wallet-tab-content" id="walletBuySTATab">
+                <div class="buy-sta-section">
+                    <h3>⭐ Buy Starpoints (STA)</h3>
+                    
+                    <!-- Payment Method Tabs -->
+                    <div class="payment-tabs">
+                        <button class="payment-tab active" onclick="walletEngine.switchPaymentMethod('card')">
+                            💳 Credit/Debit Card
+                        </button>
+                        <button class="payment-tab" onclick="walletEngine.switchPaymentMethod('bank')">
+                            🏦 Bank Transfer
+                        </button>
+                        <button class="payment-tab" onclick="walletEngine.switchPaymentMethod('crypto')">
+                            ₿ Crypto
+                        </button>
+                    </div>
+
+                    <!-- Card Payment -->
+                    <div class="payment-method active" id="cardPayment">
+                        <div class="payment-form">
+                            <div class="form-group">
+                                <label for="staAmount">STA Amount</label>
+                                <input type="number" id="staAmount" class="form-control" placeholder="Enter STA amount" min="10" step="10" oninput="walletEngine.calculateTotal()">
+                            </div>
+                            
+                            <div class="amount-preview">
+                                <div class="preview-row">
+                                    <span>STA Amount:</span>
+                                    <span id="previewSTA">0</span>
+                                </div>
+                                <div class="preview-row">
+                                    <span>Price per STA:</span>
+                                    <span>$<span id="staPrice">0.10</span></span>
+                                </div>
+                                <div class="preview-row total">
+                                    <span>Total Cost:</span>
+                                    <span>$<span id="totalCost">0.00</span></span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="cardNumber">Card Number</label>
+                                <input type="text" id="cardNumber" class="form-control" placeholder="1234 5678 9012 3456">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="expiryDate">Expiry Date</label>
+                                    <input type="text" id="expiryDate" class="form-control" placeholder="MM/YY">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cvv">CVV</label>
+                                    <input type="text" id="cvv" class="form-control" placeholder="123">
+                                </div>
+                            </div>
+                            
+                            <button class="buy-btn" onclick="walletEngine.processSTAPurchase('card')">
+                                Buy STA - $<span id="finalAmount">0.00</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bank Transfer -->
+                    <div class="payment-method" id="bankPayment">
+                        <div class="bank-instructions">
+                            <h4>Bank Transfer Instructions</h4>
+                            <div class="instruction-step">
+                                <strong>1. Transfer Details:</strong>
+                                <div class="bank-details">
+                                    <div>Account: Next Star Holdings</div>
+                                    <div>IBAN: XX00 XXXX 0000 0000 0000</div>
+                                    <div>SWIFT: NEXTUSXX</div>
+                                    <div>Reference: STA-<span id="userReference">{{ user.id }}</span></div>
+                                </div>
+                            </div>
+                            <div class="instruction-step">
+                                <strong>2. Enter Transfer Details:</strong>
+                                <input type="number" id="bankSTA" class="form-control" placeholder="STA Amount" oninput="walletEngine.calculateBankTotal()">
+                                <div class="bank-total">
+                                    Amount to send: $<span id="bankTotal">0.00</span>
+                                </div>
+                            </div>
+                            <div class="instruction-step">
+                                <strong>3. Confirm Transfer:</strong>
+                                <button class="confirm-btn" onclick="walletEngine.confirmBankTransfer()">
+                                    I've Sent the Payment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Crypto Payment -->
+                    <div class="payment-method" id="cryptoPayment">
+                        <div class="crypto-options">
+                            <h4>Select Cryptocurrency</h4>
+                            <div class="crypto-grid">
+                                <div class="crypto-option" onclick="walletEngine.selectCrypto('BTC')">
+                                    <span class="crypto-icon">₿</span>
+                                    <span>Bitcoin (BTC)</span>
+                                </div>
+                                <div class="crypto-option" onclick="walletEngine.selectCrypto('ETH')">
+                                    <span class="crypto-icon">Ξ</span>
+                                    <span>Ethereum (ETH)</span>
+                                </div>
+                                <div class="crypto-option" onclick="walletEngine.selectCrypto('HBAR')">
+                                    <span class="crypto-icon">⚡</span>
+                                    <span>Hedera (HBAR)</span>
+                                </div>
+                                <div class="crypto-option" onclick="walletEngine.selectCrypto('USDC')">
+                                    <span class="crypto-icon">💵</span>
+                                    <span>USDC</span>
+                                </div>
+                            </div>
+                            
+                            <div id="cryptoPaymentDetails" style="display: none;">
+                                <div class="crypto-address">
+                                    <strong>Send to Address:</strong>
+                                    <div class="address-container">
+                                        <span id="cryptoAddress">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</span>
+                                        <button class="copy-btn" onclick="walletEngine.copyCryptoAddress()">📋</button>
+                                    </div>
+                                </div>
+                                <div class="crypto-amount">
+                                    <strong>Amount:</strong>
+                                    <span id="cryptoAmount">0.00000000 BTC</span>
+                                </div>
+                                <div class="crypto-warning">
+                                    ⚠️ Send exact amount only to this address
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions Tab -->
+            <div class="wallet-tab-content" id="walletTransactionsTab">
+                <div class="transactions-header">
+                    <h3>Transaction History</h3>
+                    <div class="transaction-filters">
+                        <select id="transactionFilter" onchange="walletEngine.filterTransactions()">
+                            <option value="all">All Transactions</option>
+                            <option value="sta">STA Purchases</option>
+                            <option value="tickets">Ticket Purchases</option>
+                            <option value="hedera">Hedera Transactions</option>
+                            <option value="rewards">Rewards</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="transaction-history">
+                    <div class="transaction-list" id="transactionList">
+                        <!-- Transactions will be loaded here -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Send Modal -->
+<div class="modal" id="sendModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Send STA Tokens</h3>
+            <span class="modal-close" onclick="walletEngine.closeSendModal()">×</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="sendTo">Recipient Hedera Account ID</label>
+                <input type="text" id="sendTo" class="form-control" placeholder="0.0.1234567">
+            </div>
+            <div class="form-group">
+                <label for="sendAmount">STA Amount</label>
+                <input type="number" id="sendAmount" class="form-control" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="sendMemo">Memo (Optional)</label>
+                <input type="text" id="sendMemo" class="form-control" placeholder="Add a note">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn secondary" onclick="walletEngine.closeSendModal()">Cancel</button>
+            <button class="modal-btn primary" onclick="walletEngine.confirmSend()">Send STA</button>
+        </div>
+    </div>
+</div>
+
+<!-- Receive Modal -->
+<div class="modal" id="receiveModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Receive STA Tokens</h3>
+            <span class="modal-close" onclick="walletEngine.closeReceiveModal()">×</span>
+        </div>
+        <div class="modal-body">
+            <div class="receive-qr">
+                <!-- QR Code would be generated here -->
+                <div class="qr-placeholder">
+                    <div class="qr-text">QR Code</div>
+                </div>
+            </div>
+            <div class="receive-address">
+                <strong>Your Hedera Account ID:</strong>
+                <div class="address-container">
+                    <span id="receiveAddress">{{ user.hedera_recipient_id|default:"0.0.0000000" }}</span>
+                    <button class="copy-btn" onclick="walletEngine.copyReceiveAddress()">📋</button>
+                </div>
+            </div>
+            <div class="receive-note">
+                Send STA tokens to this Hedera account ID. Only send STA tokens to this address.
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- NFT Tickets Window -->
     <div class="window" id="nftWindow">
@@ -1365,6 +1751,9 @@
     <script src="{% static 'js/start-menu.js' %}"></script>
     <script src="{% static 'js/governance-engine.js' %}"></script>
     <script src="{% static 'js/profile-engine.js' %}"></script>
+    <script src="{% static 'js/wallet-engine.js' %}"></script>
+    <script src="{% static 'js/venture-game-engine.js' %}"></script>
+    <script src="{% static 'js/matrix-engine.js' %}"></script>
     
     <script>
         // Window Management
@@ -1583,11 +1972,19 @@
             if (typeof authManager !== 'undefined') {
                 authManager.init();
             }
+
+            // Initialize Matrix Engine
+            if (typeof MatrixEngine !== 'undefined') {
+                window.matrixEngine = new MatrixEngine();
+            }
             
             // Open ventures window by default
             setTimeout(() => {
                 openWindow('ventureWindow');
             }, 500);
+            if (typeof walletEngine !== 'undefined') {
+                walletEngine.init();
+            }
         });
 
         // Export functions to global scope

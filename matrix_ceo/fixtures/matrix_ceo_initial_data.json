@@ -1,0 +1,44 @@
+[
+  {
+    "model": "matrix_ceo.project",
+    "pk": 1,
+    "fields": {
+      "name": "Quantum AI Assistant",
+      "domain": "AI",
+      "description": "Build next-generation AI assistant with quantum computing capabilities",
+      "icon": "🤖",
+      "total_shares": 1000,
+      "ceo_shares": 200,
+      "participant_shares": 800,
+      "ticket_price": "25.00",
+      "matrix_complexity": 7,
+      "time_limit_hours": 24,
+      "required_patterns": 3,
+      "status": "active",
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  },
+  {
+    "model": "matrix_ceo.project",
+    "pk": 2,
+    "fields": {
+      "name": "Blockchain Supply Chain",
+      "domain": "Blockchain",
+      "description": "Revolutionize supply chain management with transparent blockchain tracking",
+      "icon": "⛓️",
+      "total_shares": 800,
+      "ceo_shares": 150,
+      "participant_shares": 650,
+      "ticket_price": "15.00",
+      "matrix_complexity": 6,
+      "time_limit_hours": 18,
+      "required_patterns": 3,
+      "status": "running",
+      "start_time": "2024-01-15T08:00:00Z",
+      "end_time": "2024-01-16T02:00:00Z",
+      "created_at": "2024-01-14T10:00:00Z",
+      "updated_at": "2024-01-15T08:00:00Z"
+    }
+  }
+]

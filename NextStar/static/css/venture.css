@@ -1,0 +1,878 @@
+/* Venture Game Windows */
+.venture-game-window {
+    min-width: 800px;
+    min-height: 600px;
+}
+
+.venture-game-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: 1fr auto;
+    gap: 20px;
+    height: 100%;
+}
+
+.venture-info-panel {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.venture-stats {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+}
+
+.stat-label {
+    color: var(--parrot-text-secondary);
+}
+
+.stat-value {
+    color: var(--parrot-accent);
+    font-weight: bold;
+}
+
+.venture-actions {
+    text-align: center;
+}
+
+.join-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--parrot-accent);
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.join-btn:hover {
+    background: var(--parrot-accent-secondary);
+    transform: translateY(-2px);
+}
+
+.join-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--parrot-text);
+}
+
+.join-btn.disabled {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--parrot-text-secondary);
+    cursor: not-allowed;
+}
+
+.join-btn.disabled:hover {
+    transform: none;
+}
+
+.joined-status {
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid var(--parrot-accent);
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    color: var(--parrot-accent);
+}
+
+.maze-container {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.maze-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.maze-horizontal {
+    display: flex;
+    gap: 10px;
+}
+
+.maze-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    color: var(--parrot-text);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.maze-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+    transform: scale(1.1);
+}
+
+.maze-stats {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.threejs-container {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.leaderboard-panel {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.leaderboard-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.leaderboard-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-entry:last-child {
+    border-bottom: none;
+}
+
+.leaderboard-entry.ceo-entry {
+    background: rgba(0, 255, 136, 0.1);
+    border-left: 3px solid var(--parrot-accent);
+}
+
+.ceo-badge {
+    background: var(--parrot-accent);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background: var(--parrot-window-bg);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--parrot-border);
+}
+
+.modal-close {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--parrot-text-secondary);
+}
+
+.modal-close:hover {
+    color: var(--parrot-accent);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .venture-game-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    
+    .venture-info-panel {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    
+    .maze-container {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    
+    .leaderboard-panel {
+        grid-column: 1;
+        grid-row: 3;
+    }
+    
+    .maze-controls {
+        flex-direction: row;
+        justify-content: center;
+    }
+    
+    .maze-horizontal {
+        flex-direction: column;
+    }
+}
+
+
+/* Venture Game Styles */
+.venture-game-window {
+    min-width: 900px;
+    min-height: 700px;
+}
+
+.venture-game-dashboard {
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.game-header {
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border: 1px solid var(--parrot-border);
+}
+
+.game-header h2 {
+    color: var(--parrot-accent);
+    margin-bottom: 10px;
+}
+
+.refresh-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 5px;
+    padding: 10px 20px;
+    color: var(--parrot-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+}
+
+.venture-games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.venture-game-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.venture-game-card:hover {
+    border-color: var(--parrot-accent);
+    transform: translateY(-2px);
+}
+
+.game-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.game-icon {
+    font-size: 2rem;
+}
+
+.game-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.game-status.active {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--parrot-accent);
+    border: 1px solid var(--parrot-accent);
+}
+
+.game-status.running {
+    background: rgba(255, 170, 0, 0.2);
+    color: #ffaa00;
+    border: 1px solid #ffaa00;
+}
+
+.game-status.upcoming {
+    background: rgba(0, 153, 255, 0.2);
+    color: var(--parrot-accent-secondary);
+    border: 1px solid var(--parrot-accent-secondary);
+}
+
+.game-title {
+    color: var(--parrot-accent);
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.game-description {
+    color: var(--parrot-text-secondary);
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.game-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.game-stat {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+}
+
+.stat-label {
+    color: var(--parrot-text-secondary);
+}
+
+.stat-value {
+    color: var(--parrot-accent);
+    font-weight: bold;
+}
+
+.game-card-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.game-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.game-btn.primary {
+    background: var(--parrot-accent);
+    color: #000;
+}
+
+.game-btn.primary:hover {
+    background: var(--parrot-accent-secondary);
+    transform: translateY(-2px);
+}
+
+.game-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--parrot-text);
+    border: 1px solid var(--parrot-border);
+}
+
+.game-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.game-btn.disabled {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--parrot-text-secondary);
+    cursor: not-allowed;
+}
+
+.joined-badge {
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid var(--parrot-accent);
+    border-radius: 5px;
+    padding: 12px;
+    text-align: center;
+    color: var(--parrot-accent);
+    font-weight: bold;
+}
+
+.game-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--parrot-accent);
+}
+
+.stat-label {
+    color: var(--parrot-text-secondary);
+    font-size: 0.8rem;
+}
+
+/* Maze Game Window */
+.maze-game-window {
+    min-width: 1000px;
+    min-height: 700px;
+}
+
+.maze-game-container {
+    display: grid;
+    grid-template-columns: 300px 1fr 250px;
+    gap: 20px;
+    height: 100%;
+    padding: 20px;
+}
+
+.maze-info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.maze-stats {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.maze-stat {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.maze-stat:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+}
+
+.ceo-prize {
+    color: var(--parrot-accent);
+    font-weight: bold;
+}
+
+.maze-controls {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+}
+
+.control-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.maze-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    color: var(--parrot-text);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.maze-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+    transform: scale(1.1);
+}
+
+.maze-visualization {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.threejs-maze-container {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.maze-minimap {
+    height: 150px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.leaderboard-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.leaderboard-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.leaderboard-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-entry.ceo-entry {
+    background: rgba(0, 255, 136, 0.1);
+    border-left: 3px solid var(--parrot-accent);
+}
+
+.ceo-badge {
+    background: var(--parrot-accent);
+    color: #000;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.hint-btn {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid #ffc107;
+    border-radius: 5px;
+    color: #ffc107;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.hint-btn:hover {
+    background: rgba(255, 193, 7, 0.2);
+}
+
+.no-games-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--parrot-text-secondary);
+}
+
+.no-games-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .venture-games-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .maze-game-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+    }
+    
+    .game-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+
+/* Maze Game Window - Fixed Sizing */
+.maze-game-window {
+    min-width: 1200px !important;
+    min-height: 800px !important;
+    width: 1200px;
+    height: 800px;
+    max-width: 95vw;
+    max-height: 95vh;
+    resize: both;
+    overflow: auto;
+}
+
+.maze-game-container {
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    grid-template-rows: 1fr;
+    gap: 20px;
+    height: calc(100% - 40px);
+    padding: 20px;
+    overflow: hidden;
+}
+
+/* Fix Window Controls */
+.window-header {
+    height: 40px;
+    background: rgba(26, 26, 46, 0.8);
+    border-bottom: 1px solid var(--parrot-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    cursor: move;
+    border-radius: 10px 10px 0 0;
+    user-select: none;
+}
+
+.window-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.window-control {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.window-control.close { 
+    background: #ff5f57; 
+}
+.window-control.close:hover { 
+    background: #ff3b30; 
+    transform: scale(1.1);
+}
+
+.window-control.minimize { 
+    background: #ffbd2e; 
+}
+.window-control.minimize:hover { 
+    background: #ffaa00; 
+    transform: scale(1.1);
+}
+
+.window-control.maximize { 
+    background: #28ca42; 
+}
+.window-control.maximize:hover { 
+    background: #00c300; 
+    transform: scale(1.1);
+}
+
+/* Maze Visualization Area */
+.maze-visualization {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: 100%;
+}
+
+.threejs-maze-container {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 400px;
+    position: relative;
+}
+
+.threejs-maze-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+/* Maze Controls */
+.maze-controls {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.control-row {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.maze-btn {
+    width: 70px;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--parrot-border);
+    border-radius: 10px;
+    color: var(--parrot-text);
+    font-size: 1.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.maze-btn:hover {
+    background: var(--parrot-accent);
+    color: #000;
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+}
+
+.maze-btn:active {
+    transform: scale(0.95);
+}
+
+/* Maze Stats */
+.maze-info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.maze-stats {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--parrot-border);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.maze-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.maze-stat:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.maze-stat label {
+    color: var(--parrot-text-secondary);
+    font-weight: 500;
+}
+
+.maze-stat span {
+    color: var(--parrot-accent);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.ceo-prize {
+    color: var(--parrot-accent) !important;
+    font-weight: bold;
+    background: rgba(0, 255, 136, 0.1);
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--parrot-accent);
+}
+
+/* Loading State */
+.maze-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--parrot-text-secondary);
+    gap: 20px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid transparent;
+    border-top: 3px solid var(--parrot-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

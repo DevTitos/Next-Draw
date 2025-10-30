@@ -132,8 +132,8 @@ def create_token_fungible_finite():
     # In this example, we set up a default empty token create transaction, then set the values
     transaction = (
         TokenCreateTransaction()
-        .set_token_name("NOVA")
-        .set_token_symbol("NOVA")
+        .set_token_name("StarPoints")
+        .set_token_symbol("STA")
         .set_decimals(2)
         .set_initial_supply(100000000)  # TokenType.FUNGIBLE_COMMON must have >0 initial supply. Cannot exceed max supply
         .set_treasury_account_id(operator_id) # Also known as treasury account
@@ -180,3 +180,4 @@ def setup_client():
     client.set_operator(operator_id, operator_key)
     
     return client, operator_id, operator_key
+

@@ -9,4 +9,7 @@ urlpatterns = [
     path('selections/<int:selection_id>/solve/', views.attempt_puzzle_solution, name='attempt_puzzle_solution'),
     path('selections/<int:selection_id>/insights/', views.strategic_insights, name='strategic_insights'),
     path('leaderboard/', views.matrix_leaderboard, name='matrix_leaderboard'),
+    path('selection/<int:selection_id>/purchase-ticket/', views.purchase_ticket, name='purchase_ticket'),
+    path('selection/<int:selection_id>/ticket-info/', views.get_ticket_info, name='get_ticket_info'),
+    path('my-tickets/', views.get_user_tickets, name='get_user_tickets'),
 ]

@@ -5,6 +5,7 @@ class MatrixEngine {
         this.currentSelection = null;
         this.currentMatrix = null;
         this.currentPuzzle = null;
+        this.selectedApproach = null;
         this.apiBase = '/matrix/api';
         
         this.init();
@@ -17,7 +18,6 @@ class MatrixEngine {
     }
 
     setupEventListeners() {
-        // Keyboard shortcuts for matrix navigation
         document.addEventListener('keydown', (e) => {
             if (this.currentMatrix && e.ctrlKey && e.key === 'm') {
                 e.preventDefault();
@@ -39,16 +39,24 @@ class MatrixEngine {
 
         try {
             const response = await fetch(url, config);
-            if (!response.ok) throw new Error('Network error');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Network error');
+            }
             return await response.json();
         } catch (error) {
             console.error('Matrix API request failed:', error);
+            this.showNotification(`API Error: ${error.message}`, 'error');
             throw error;
         }
     }
 
     getCSRFToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        const cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+        return cookieValue || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
     }
 
     async loadDashboard() {
@@ -57,48 +65,13 @@ class MatrixEngine {
             if (response.success) {
                 this.activeProjects = response.projects;
                 this.updateDashboard();
+            } else {
+                this.showNotification('Failed to load dashboard', 'error');
             }
         } catch (error) {
             console.error('Error loading dashboard:', error);
-            // Load demo data
-            this.loadDemoData();
+            this.showNotification('Cannot connect to server. Please refresh the page.', 'error');
         }
-    }
-
-    loadDemoData() {
-        this.activeProjects = [
-            {
-                id: 1,
-                name: 'Quantum Neural Interface Corporation',
-                domain: 'AI',
-                vision: 'Pioneering human-AI symbiosis through advanced neural interfaces',
-                complexity: 'Executive Level (8+ years experience)',
-                compensation: {
-                    equity_shares: 1500000,
-                    base_salary: 450000,
-                    performance_bonus: 'up to 200% of base'
-                },
-                status: 'approved',
-                user_application_status: 'not_applied',
-                can_apply: true
-            },
-            {
-                id: 2,
-                name: 'Decentralized Autonomous Energy Grid',
-                domain: 'Blockchain', 
-                vision: 'Democratizing energy distribution through blockchain microgrids',
-                complexity: 'Senior Level (5-8 years experience)',
-                compensation: {
-                    equity_shares: 1200000,
-                    base_salary: 380000,
-                    performance_bonus: 'up to 150% of base'
-                },
-                status: 'approved',
-                user_application_status: 'not_applied',
-                can_apply: true
-            }
-        ];
-        this.updateDashboard();
     }
 
     openDashboard() {
@@ -118,7 +91,7 @@ class MatrixEngine {
                         ${project.complexity.split('(')[0].trim()}
                     </div>
                 </div>
-                
+                 
                 <div class="project-body">
                     <h3>${project.name}</h3>
                     <div class="project-domain">${project.domain}</div>
@@ -150,7 +123,7 @@ class MatrixEngine {
                             🌌 Continue Matrix Challenge
                         </button>
                     ` : project.user_application_status === 'board_interview' ? `
-                        <button class="matrix-btn success" onclick="matrixEngine.showInterviewStatus(${project.id})">
+                        <button class="matrix-btn success">
                             📊 Board Review - Score: ${project.score || 'Pending'}
                         </button>
                     ` : `
@@ -167,16 +140,20 @@ class MatrixEngine {
 
     getDomainIcon(domain) {
         const icons = {
-            'AI': '🧠',
-            'Blockchain': '⛓️',
-            'Biotech': '🧬',
-            'Fintech': '💳',
-            'CleanTech': '☀️'
+            'Transportation': '🚗',
+            'Agriculture': '🌱',
+            'Healthcare': '🏥',
+            'Retail': '🛍️',
+            'Manufacturing': '🏭',
+            'Logistics': '📦',
+            'Technology': '💻',
+            'Finance': '💰'
         };
         return icons[domain] || '🚀';
     }
 
     formatNumber(num) {
+        if (!num) return '0';
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
@@ -185,9 +162,13 @@ class MatrixEngine {
         const applicationsCount = this.activeProjects.filter(p => p.user_application_status !== 'not_applied').length;
         const inProgressCount = this.activeProjects.filter(p => p.user_application_status === 'matrix_challenge').length;
 
-        document.getElementById('activeProjectsCount').textContent = activeCount;
-        document.getElementById('ceoApplicationsCount').textContent = applicationsCount;
-        document.getElementById('matrixChallengesCount').textContent = inProgressCount;
+        const activeEl = document.getElementById('activeProjectsCount');
+        const applicationsEl = document.getElementById('ceoApplicationsCount');
+        const challengesEl = document.getElementById('matrixChallengesCount');
+
+        if (activeEl) activeEl.textContent = activeCount;
+        if (applicationsEl) applicationsEl.textContent = applicationsCount;
+        if (challengesEl) challengesEl.textContent = inProgressCount;
     }
 
     async applyForCEO(projectId) {
@@ -196,33 +177,28 @@ class MatrixEngine {
 
         try {
             const response = await this.makeRequest(`/projects/${projectId}/apply/`, {
-                method: 'POST'
+                method: 'POST',
+                body: JSON.stringify({})
             });
 
             if (response.success) {
                 this.showNotification(`✅ Applied for ${project.name}! Matrix challenge started.`, 'success');
                 
-                // Update project status
+                // Update local state
                 project.user_application_status = 'matrix_challenge';
+                project.user_selection_id = response.selection_id;
                 this.updateDashboard();
                 
-                // Auto-enter matrix
+                // Enter matrix immediately
                 setTimeout(() => {
                     this.enterMatrix(projectId, response.selection_id);
-                }, 2000);
+                }, 1500);
             } else {
                 this.showNotification(response.error, 'error');
             }
         } catch (error) {
             console.error('Apply failed:', error);
-            // Demo mode
-            this.showNotification('Using demo mode - application submitted', 'info');
-            project.user_application_status = 'matrix_challenge';
-            this.updateDashboard();
-            
-            setTimeout(() => {
-                this.enterMatrix(projectId, 'demo-' + Date.now());
-            }, 2000);
+            this.showNotification('Failed to apply. Please try again.', 'error');
         }
     }
 
@@ -231,130 +207,40 @@ class MatrixEngine {
         if (!project) return;
 
         try {
+            // If no selection ID provided, find from user selections
             if (!selectionId) {
-                // Find existing selection
-                const response = await this.makeRequest('/dashboard/');
-                const selection = response.user_selections.find(s => s.project_name === project.name);
-                if (selection) {
-                    selectionId = this.getSelectionIdFromStatus(selection);
+                const dashboardResponse = await this.makeRequest('/dashboard/');
+                const userSelection = dashboardResponse.user_selections?.find(
+                    s => s.project_name === project.name
+                );
+                if (userSelection && userSelection.selection_id) {
+                    selectionId = userSelection.selection_id;
                 }
             }
 
-            if (selectionId) {
-                const matrixResponse = await this.makeRequest(`/selections/${selectionId}/matrix/`);
-                
-                if (matrixResponse.success) {
-                    this.openMatrixGame(project, matrixResponse);
-                } else {
-                    this.showNotification(matrixResponse.error, 'error');
-                }
+            if (!selectionId) {
+                this.showNotification('No active matrix session found. Please apply first.', 'error');
+                return;
+            }
+
+            const matrixResponse = await this.makeRequest(`/selections/${selectionId}/matrix/`);
+            
+            if (matrixResponse.success) {
+                this.openMatrixGame(project, matrixResponse);
+            } else {
+                this.showNotification(matrixResponse.error, 'error');
             }
         } catch (error) {
             console.error('Enter matrix failed:', error);
-            // Demo mode
-            this.showNotification('Using demo mode - matrix session loaded', 'info');
-            this.openMatrixGame(project, this.createDemoMatrixState(project));
+            this.showNotification('Failed to load matrix session.', 'error');
         }
-    }
-
-    getSelectionIdFromStatus(selection) {
-        // In a real app, this would extract the selection ID
-        return 'demo-selection';
-    }
-
-    createDemoMatrixState(project) {
-        return {
-            selection_status: 'matrix_challenge',
-            matrix_progress: {
-                current_node: 15,
-                total_nodes: 50,
-                strategic_depth: 2,
-                paradox_level: 3,
-                cycles_completed: 0,
-                total_decisions: 27
-            },
-            current_puzzle: {
-                node_id: 15,
-                strategic_depth: 2,
-                puzzle_data: {
-                    type: 'quantum_entanglement',
-                    title: 'Quantum Executive Decision Matrix #16',
-                    scenario: "You're facing 5 simultaneous strategic opportunities in quantum superposition. Each observation collapses possibilities and creates new realities.",
-                    quantum_states: [
-                        { state_id: "q15_0", potential: 85, entanglement: ["q15_1", "q15_2"], observation_cost: "Loses 18% of other states", strategic_implication: "Creates 4 new decision branches" },
-                        { state_id: "q15_1", potential: 120, entanglement: ["q15_0", "q15_3"], observation_cost: "Loses 22% of other states", strategic_implication: "Creates 3 new decision branches" },
-                        { state_id: "q15_2", potential: 65, entanglement: ["q15_0", "q15_4"], observation_cost: "Loses 15% of other states", strategic_implication: "Creates 5 new decision branches" },
-                        { state_id: "q15_3", potential: 95, entanglement: ["q15_1", "q15_4"], observation_cost: "Loses 20% of other states", strategic_implication: "Creates 2 new decision branches" },
-                        { state_id: "q15_4", potential: 110, entanglement: ["q15_2", "q15_3"], observation_cost: "Loses 25% of other states", strategic_implication: "Creates 4 new decision branches" }
-                    ],
-                    constraints: [
-                        "Observation order affects outcome probabilities",
-                        "Each choice creates quantum debt in other dimensions",
-                        "Node 16 is entangled with nodes 17, 18, 19",
-                        "The optimal path requires non-sequential thinking"
-                    ],
-                    strategic_question: "What's your quantum observation sequence to maximize preserved strategic potential?",
-                    hidden_complexity: "Linear sequences create maximum entropy loss",
-                    paradox_trigger: "Chronological observation creates temporal interference"
-                },
-                available_approaches: [
-                    {
-                        id: 'linear_sequential',
-                        name: 'Linear Sequential Observation',
-                        description: 'Observe quantum states in numerical order',
-                        apparent_simplicity: 'Very High',
-                        true_complexity: 'Creates maximum quantum decoherence',
-                        success_rate: '20%',
-                        paradox_risk: 'Extreme',
-                        trap_warning: 'This approach seems obvious but will trap you in lower dimensions'
-                    },
-                    {
-                        id: 'parallel_sampling', 
-                        name: 'Parallel State Sampling',
-                        description: 'Sample multiple states simultaneously using quantum computing principles',
-                        apparent_simplicity: 'Medium',
-                        true_complexity: 'Requires maintaining quantum coherence',
-                        success_rate: '44%',
-                        paradox_risk: 'High',
-                        trap_warning: 'Parallel processing creates interference patterns'
-                    },
-                    {
-                        id: 'entangled_strategy',
-                        name: 'Entangled Strategic Positioning',
-                        description: 'Use quantum entanglement as strategic advantage rather than obstacle',
-                        apparent_simplicity: 'Very Low', 
-                        true_complexity: 'Creates stable quantum solutions through superposition',
-                        success_rate: '81%',
-                        paradox_risk: 'Low',
-                        trap_warning: 'Requires non-linear thinking patterns'
-                    }
-                ],
-                paradox_warnings: [
-                    "Direct solutions create recursive complexity",
-                    "Linear thinking increases entropy in non-linear systems", 
-                    "Each decision affects multiple node dimensions simultaneously"
-                ],
-                matrix_context: {
-                    total_nodes: 50,
-                    current_progress: "16/50",
-                    strategic_depth: 2,
-                    paradox_level: 3,
-                    cycles_completed: 0,
-                    eternal_nature: "Solutions create new complexity - the matrix is infinite"
-                }
-            },
-            project_info: {
-                name: project.name,
-                domain: project.domain,
-                vision: project.vision
-            }
-        };
     }
 
     openMatrixGame(project, matrixState) {
         this.currentProject = project;
         this.currentMatrix = matrixState;
         this.currentPuzzle = matrixState.current_puzzle;
+        this.selectedApproach = null;
         
         const gameContainer = document.querySelector('#matrixGameWindow .window-content .matrix-game-container');
         const title = document.getElementById('matrixGameTitle');
@@ -363,10 +249,10 @@ class MatrixEngine {
         
         if (gameContainer) {
             gameContainer.innerHTML = this.generateMatrixHTML(matrixState);
+            this.attachMatrixEventListeners();
         }
         
         openWindow('matrixGameWindow');
-        this.attachMatrixEventListeners();
     }
 
     generateMatrixHTML(matrixState) {
@@ -455,19 +341,19 @@ class MatrixEngine {
                     <div class="solution-form">
                         <div class="form-group">
                             <label for="solutionReasoning">Strategic Reasoning:</label>
-                            <textarea id="solutionReasoning" placeholder="Explain your multi-dimensional reasoning..."></textarea>
+                            <textarea id="solutionReasoning" placeholder="Explain your multi-dimensional reasoning..." rows="4"></textarea>
                         </div>
                         <div class="form-group">
                             <label for="solutionConsiderations">Key Considerations:</label>
-                            <textarea id="solutionConsiderations" placeholder="What dimensions did you consider?"></textarea>
+                            <textarea id="solutionConsiderations" placeholder="What business dimensions did you consider?" rows="3"></textarea>
                         </div>
                         <div class="form-group">
                             <label for="solutionContingencies">Contingency Plans:</label>
-                            <textarea id="solutionContingencies" placeholder="How do you handle unexpected outcomes?"></textarea>
+                            <textarea id="solutionContingencies" placeholder="How do you handle unexpected business outcomes?" rows="3"></textarea>
                         </div>
                         <div class="form-actions">
-                            <button class="matrix-btn secondary" onclick="matrixEngine.cancelSolution()">Cancel</button>
-                            <button class="matrix-btn primary" onclick="matrixEngine.submitSolution()">Execute Strategic Decision</button>
+                            <button type="button" class="matrix-btn secondary" onclick="matrixEngine.cancelSolution()">Cancel</button>
+                            <button type="button" class="matrix-btn primary" onclick="matrixEngine.submitSolution()">Execute Strategic Decision</button>
                         </div>
                     </div>
                 </div>
@@ -493,14 +379,7 @@ class MatrixEngine {
                 <div class="strategic-insights">
                     <h4>Strategic Patterns</h4>
                     <div id="patternsList">
-                        <div class="pattern-item">
-                            <span class="pattern-icon">🔍</span>
-                            <span class="pattern-name">Quantum Thinking Required</span>
-                        </div>
-                        <div class="pattern-item">
-                            <span class="pattern-icon">🔍</span>
-                            <span class="pattern-name">Multi-dimensional Optimization</span>
-                        </div>
+                        ${this.generatePatternsHTML(puzzle.puzzle_data.type)}
                     </div>
                 </div>
                 
@@ -518,65 +397,84 @@ class MatrixEngine {
 
     generatePuzzleDetails(puzzleData) {
         switch(puzzleData.type) {
-            case 'quantum_entanglement':
+            case 'market_dominance':
                 return `
-                    <div class="quantum-states">
-                        <h5>Quantum Strategic States</h5>
-                        ${puzzleData.quantum_states.map(state => `
-                            <div class="quantum-state">
-                                <div class="state-header">
-                                    <span class="state-id">${state.state_id}</span>
-                                    <span class="state-potential">Potential: ${state.potential}</span>
+                    <div class="market-data">
+                        <h5>Market Landscape</h5>
+                        ${Object.entries(puzzleData.market_data || {}).map(([key, data]) => `
+                            <div class="market-player">
+                                <div class="player-header">
+                                    <span class="player-name">${key.replace('_', ' ').toUpperCase()}</span>
+                                    ${data.market_share ? `<span class="player-share">${data.market_share}</span>` : ''}
                                 </div>
-                                <div class="state-details">
-                                    <div>Entangled with: ${state.entanglement.join(', ')}</div>
-                                    <div>Observation Cost: ${state.observation_cost}</div>
-                                    <div>Strategic Impact: ${state.strategic_implication}</div>
+                                <div class="player-details">
+                                    ${data.strength ? `<div>Strength: ${data.strength}</div>` : ''}
+                                    ${data.weakness ? `<div>Weakness: ${data.weakness}</div>` : ''}
+                                    ${data.budget ? `<div>Budget: ${data.budget}</div>` : ''}
                                 </div>
                             </div>
                         `).join('')}
                     </div>
                 `;
-            case 'temporal_paradox':
+            case 'financial_turnaround':
                 return `
-                    <div class="timeline-data">
-                        <h5>Temporal Intelligence</h5>
-                        ${puzzleData.timeline_data.map(timeline => `
-                            <div class="timeline-period">
-                                <div class="period-header">
-                                    <span class="period-name">${timeline.period}</span>
-                                    <span class="period-risk">Risk: ${timeline.causality_risk}</span>
-                                </div>
-                                <div class="period-details">
-                                    <div>Known Outcomes: ${timeline.known_outcomes}</div>
-                                    <div>Strategic Value: ${timeline.strategic_value}</div>
-                                    <div>Paradox Conditions: ${timeline.paradox_conditions.join('; ')}</div>
-                                </div>
+                    <div class="financial-snapshot">
+                        <h5>Financial Situation</h5>
+                        ${Object.entries(puzzleData.financial_snapshot || {}).map(([key, value]) => `
+                            <div class="financial-item">
+                                <span class="financial-label">${key.replace('_', ' ').toUpperCase()}:</span>
+                                <span class="financial-value">${value}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${puzzleData.crisis_points ? `
+                    <div class="crisis-points">
+                        <h5>Immediate Crises</h5>
+                        ${puzzleData.crisis_points.map(point => `
+                            <div class="crisis-item">• ${point}</div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
+                `;
+            case 'merger_acquisition':
+                return `
+                    <div class="merger-dynamics">
+                        <h5>Merger Dynamics</h5>
+                        ${Object.entries(puzzleData.merger_dynamics || {}).map(([key, value]) => `
+                            <div class="merger-item">
+                                <span class="merger-label">${key.replace('_', ' ').toUpperCase()}:</span>
+                                <span class="merger-value">${value}</span>
                             </div>
                         `).join('')}
                     </div>
                 `;
             default:
-                return `<div class="puzzle-constraints">
-                    <h5>Strategic Constraints</h5>
-                    ${puzzleData.constraints.map(constraint => `
-                        <div class="constraint-item">• ${constraint}</div>
-                    `).join('')}
-                </div>`;
+                return `
+                    <div class="puzzle-constraints">
+                        <h5>Strategic Constraints</h5>
+                        ${(puzzleData.constraints || []).map(constraint => `
+                            <div class="constraint-item">• ${constraint}</div>
+                        `).join('')}
+                    </div>
+                `;
         }
     }
 
     generateApproachesHTML(approaches) {
+        if (!approaches || approaches.length === 0) {
+            return '<div class="no-approaches">No strategic approaches available</div>';
+        }
+
         return approaches.map(approach => `
             <div class="strategic-approach" data-approach-id="${approach.id}">
                 <div class="approach-header">
                     <h5>${approach.name}</h5>
                     <div class="approach-meta">
-                        <span class="success-rate ${approach.success_rate.includes('8') ? 'high' : 'low'}">
-                            ${approach.success_rate} success
+                        <span class="success-rate ${approach.success_rate && approach.success_rate.includes('8') ? 'high' : 'low'}">
+                            ${approach.success_rate || '0%'} success
                         </span>
                         <span class="paradox-risk ${approach.paradox_risk === 'Extreme' ? 'extreme' : 'moderate'}">
-                            ${approach.paradox_risk} paradox risk
+                            ${approach.paradox_risk || 'Unknown'} paradox risk
                         </span>
                     </div>
                 </div>
@@ -586,19 +484,40 @@ class MatrixEngine {
                 <div class="approach-complexity">
                     <div class="apparent-simplicity">
                         <label>Apparent Simplicity:</label>
-                        <span>${approach.apparent_simplicity}</span>
+                        <span>${approach.apparent_simplicity || 'Unknown'}</span>
                     </div>
                     <div class="true-complexity">
                         <label>True Complexity:</label>
-                        <span>${approach.true_complexity}</span>
+                        <span>${approach.true_complexity || 'Unknown'}</span>
                     </div>
                 </div>
+                ${approach.trap_warning ? `
                 <div class="approach-warning">
                     ⚠️ ${approach.trap_warning}
                 </div>
+                ` : ''}
                 <button class="matrix-btn approach-select" onclick="matrixEngine.selectApproach('${approach.id}')">
                     Select This Approach
                 </button>
+            </div>
+        `).join('');
+    }
+
+    generatePatternsHTML(puzzleType) {
+        const patterns = {
+            'market_dominance': ['Ecosystem Strategy', 'Competitive Positioning', 'Market Segmentation'],
+            'financial_turnaround': ['Cost Optimization', 'Revenue Diversification', 'Strategic Pivoting'],
+            'merger_acquisition': ['Cultural Integration', 'Synergy Realization', 'Stakeholder Alignment'],
+            'innovation_paradox': ['Portfolio Balance', 'Risk Management', 'Resource Allocation'],
+            'talent_management': ['Culture Building', 'Performance Management', 'Retention Strategy']
+        };
+
+        const patternList = patterns[puzzleType] || ['Strategic Thinking', 'Decision Making', 'Leadership'];
+        
+        return patternList.map(pattern => `
+            <div class="pattern-item">
+                <span class="pattern-icon">🔍</span>
+                <span class="pattern-name">${pattern}</span>
             </div>
         `).join('');
     }
@@ -619,15 +538,21 @@ class MatrixEngine {
         }
         
         // Show solution interface
-        document.getElementById('solutionInterface').style.display = 'block';
-        document.getElementById('solutionReasoning').focus();
+        const solutionInterface = document.getElementById('solutionInterface');
+        if (solutionInterface) {
+            solutionInterface.style.display = 'block';
+            document.getElementById('solutionReasoning')?.focus();
+        }
         
-        this.showNotification(`Selected: ${approachId} - Prepare your strategic solution`, 'info');
+        this.showNotification(`Selected approach: ${approachId}`, 'info');
     }
 
     cancelSolution() {
         this.selectedApproach = null;
-        document.getElementById('solutionInterface').style.display = 'none';
+        const solutionInterface = document.getElementById('solutionInterface');
+        if (solutionInterface) {
+            solutionInterface.style.display = 'none';
+        }
         
         // Reset visual selection
         document.querySelectorAll('.strategic-approach').forEach(el => {
@@ -643,14 +568,16 @@ class MatrixEngine {
         }
 
         const solutionData = {
-            reasoning: document.getElementById('solutionReasoning').value,
-            considerations: document.getElementById('solutionConsiderations').value,
-            contingencies: document.getElementById('solutionContingencies').value,
-            dimensions_considered: this.estimateDimensionsConsidered()
+            reasoning: document.getElementById('solutionReasoning')?.value || '',
+            considerations: document.getElementById('solutionConsiderations')?.value || '',
+            contingencies: document.getElementById('solutionContingencies')?.value || '',
+            stakeholders_considered: this.extractStakeholders(),
+            planning_horizon: this.estimatePlanningHorizon(),
+            risk_mitigations: this.extractRiskMitigations()
         };
 
-        if (!solutionData.reasoning || !solutionData.considerations) {
-            this.showNotification('Please provide strategic reasoning and considerations', 'error');
+        if (!solutionData.reasoning.trim()) {
+            this.showNotification('Please provide your strategic reasoning', 'error');
             return;
         }
 
@@ -672,6 +599,7 @@ class MatrixEngine {
                 
                 if (response.next_challenge) {
                     this.currentMatrix.current_puzzle = response.next_challenge;
+                    // Refresh the matrix game with new puzzle
                     this.openMatrixGame(this.currentProject, this.currentMatrix);
                 } else {
                     // Matrix completed or advanced
@@ -688,64 +616,69 @@ class MatrixEngine {
             }
         } catch (error) {
             console.error('Solution submission failed:', error);
-            // Demo mode response
-            this.simulateSolutionResponse(solutionData);
+            this.showNotification('Failed to submit solution. Please try again.', 'error');
         }
     }
 
-    estimateDimensionsConsidered() {
-        const considerations = document.getElementById('solutionConsiderations').value.toLowerCase();
-        const dimensions = [];
-        
-        if (considerations.includes('quantum') || considerations.includes('superposition')) dimensions.push('quantum');
-        if (considerations.includes('time') || considerations.includes('temporal')) dimensions.push('temporal');
-        if (considerations.includes('resource') || considerations.includes('allocation')) dimensions.push('resource');
-        if (considerations.includes('stakeholder') || considerations.includes('political')) dimensions.push('stakeholder');
-        if (considerations.includes('ethical') || considerations.includes('moral')) dimensions.push('ethical');
-        
-        return dimensions.length > 0 ? dimensions : ['strategic'];
+    extractStakeholders() {
+        const text = document.getElementById('solutionConsiderations')?.value.toLowerCase() || '';
+        const stakeholders = [];
+        if (text.includes('investor') || text.includes('shareholder')) stakeholders.push('investors');
+        if (text.includes('employee') || text.includes('team')) stakeholders.push('employees');
+        if (text.includes('customer') || text.includes('client')) stakeholders.push('customers');
+        if (text.includes('board') || text.includes('director')) stakeholders.push('board');
+        if (text.includes('regulator') || text.includes('government')) stakeholders.push('regulators');
+        return stakeholders.length > 0 ? stakeholders : ['stakeholders'];
     }
 
-    simulateSolutionResponse(solutionData) {
-        // Simulate different outcomes based on approach
-        const approach = this.selectedApproach;
-        let success = false;
-        let message = '';
-        
-        if (approach.includes('entangled') || approach.includes('branching')) {
-            success = true;
-            message = '🌌 STRATEGIC BREAKTHROUGH! Advanced to next node with enhanced capabilities';
-        } else if (approach.includes('parallel')) {
-            success = true;
-            message = '📈 Advancement with complications - paradox level increased';
-        } else {
-            success = false;
-            message = '🚫 STRATEGIC TRAP ACTIVATED! Matrix complexity increased';
+    estimatePlanningHorizon() {
+        const text = document.getElementById('solutionReasoning')?.value.toLowerCase() || '';
+        if (text.includes('long-term') || text.includes('5 year') || text.includes('strategic')) return 60;
+        if (text.includes('medium-term') || text.includes('2 year') || text.includes('tactical')) return 24;
+        if (text.includes('short-term') || text.includes('90 day') || text.includes('immediate')) return 3;
+        return 12; // Default 1 year
+    }
+
+    extractRiskMitigations() {
+        const text = document.getElementById('solutionContingencies')?.value || '';
+        return text.split('.').filter(mitigation => mitigation.trim().length > 10);
+    }
+
+    async showStrategicInsights() {
+        if (!this.currentMatrix || !this.currentMatrix.selection_id) {
+            this.showNotification('No active matrix session', 'error');
+            return;
         }
-        
-        this.showNotification(message, success ? 'success' : 'error');
-        
-        if (success) {
-            setTimeout(() => {
-                this.closeMatrixGame();
-                this.loadDashboard();
-            }, 3000);
-        } else {
-            // Reload with higher complexity
-            setTimeout(() => {
-                this.currentMatrix.matrix_progress.strategic_depth += 1;
-                this.currentMatrix.matrix_progress.paradox_level += 2;
-                this.openMatrixGame(this.currentProject, this.currentMatrix);
-            }, 2000);
+
+        try {
+            const response = await this.makeRequest(`/selections/${this.currentMatrix.selection_id}/insights/`);
+            if (response.success) {
+                // TODO: Implement insights display modal
+                this.showNotification('Strategic insights loaded successfully', 'success');
+                console.log('Insights:', response.insights);
+            } else {
+                this.showNotification(response.error, 'error');
+            }
+        } catch (error) {
+            console.error('Failed to load insights:', error);
+            this.showNotification('Failed to load strategic insights', 'error');
         }
     }
 
-    showStrategicInsights() {
-        this.showNotification('Strategic Insights feature coming soon!', 'info');
-    }
-
-    showLeaderboard() {
-        this.showNotification('Leaderboard feature coming soon!', 'info');
+    async showLeaderboard() {
+        try {
+            const response = await this.makeRequest('/leaderboard/');
+            if (response.success) {
+                // TODO: Implement leaderboard display modal
+                this.showNotification('Leaderboard loaded successfully', 'success');
+                console.log('Leaderboard:', response.leaderboard);
+            } else {
+                this.showNotification(response.error, 'error');
+            }
+        } catch (error) {
+            console.error('Failed to load leaderboard:', error);
+            this.showNotification('Failed to load leaderboard', 'error');
+        }
     }
 
     closeMatrixGame() {
@@ -762,18 +695,33 @@ class MatrixEngine {
         if (typeof window.showNotification === 'function') {
             window.showNotification(message, type);
         } else {
+            // Fallback notification
             console.log(`[${type.toUpperCase()}] ${message}`);
-            alert(`${type.toUpperCase()}: ${message}`);
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${type === 'error' ? '#ff6b6b' : type === 'success' ? '#00ff88' : '#0099ff'};
+                color: #000;
+                border-radius: 5px;
+                font-weight: bold;
+                z-index: 10000;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
         }
     }
 
     attachMatrixEventListeners() {
-        // Add any matrix-specific event listeners
+        // Add any matrix-specific event listeners here
         console.log('Matrix event listeners attached');
     }
 }
 
-// Initialize the engine
+// Initialize the engine when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.matrixEngine = new MatrixEngine();
 });

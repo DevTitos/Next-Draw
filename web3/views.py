@@ -392,3 +392,239 @@ def check_governance_badges(player_profile):
         print(f"Error checking governance badges: {e}")
 
 
+# wallet/views.py
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+import json
+from .models import UserWallet
+from gameEngine.models import HederaTransaction as Transaction
+from hiero.ft import transfer_tokens
+from hiero.mirror_node import get_balance
+
+@login_required
+def wallet_overview(request):
+    """Get wallet overview data"""
+    try:
+        user_wallet = get_object_or_404(UserWallet, user=request.user)
+        
+        # Get balances
+        starpoints = get_balance(user_wallet.recipient_id)
+        
+        # Get recent transactions
+        recent_transactions = Transaction.objects.filter(
+            wallet=user_wallet
+        ).order_by('-created_at')[:10]
+        
+        return JsonResponse({
+            'success': True,
+            'wallet_data': {
+                'starpoints': starpoints,
+                'recipient_id': user_wallet.recipient_id,
+                'account_id': user_wallet.account_id,
+                'tickets': user_wallet.get_ticket_count(),
+                'coins': user_wallet.coins_balance,
+            },
+            'recent_transactions': [
+                {
+                    'id': tx.id,
+                    'type': tx.transaction_type,
+                    'amount': tx.amount,
+                    'value': f"${abs(tx.amount * 0.10):.2f}",
+                    'date': tx.get_time_ago(),
+                    'icon': tx.get_icon(),
+                    'status': tx.status
+                } for tx in recent_transactions
+            ]
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def hedera_data(request):
+    """Get Hedera-specific data"""
+    try:
+        user_wallet = get_object_or_404(UserWallet, user=request.user)
+        
+        starpoints = get_balance(user_wallet.recipient_id)
+        
+        # Get Hedera transactions
+        hedera_transactions = Transaction.objects.filter(
+            wallet=user_wallet,
+            transaction_type__in=['STA_PURCHASE', 'STA_TRANSFER', 'STA_REWARD']
+        ).order_by('-created_at')[:5]
+        
+        return JsonResponse({
+            'success': True,
+            'hedera_data': {
+                'account_id': user_wallet.account_id,
+                'recipient_id': user_wallet.recipient_id,
+                'balance': starpoints,
+                'network': 'Hedera Mainnet'
+            },
+            'transactions': [
+                {
+                    'type': tx.get_display_type(),
+                    'amount': f"{'+' if tx.amount > 0 else ''}{tx.amount} STA",
+                    'date': tx.get_time_ago(),
+                    'transaction_hash': tx.transaction_hash
+                } for tx in hedera_transactions
+            ]
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def buy_starpoints(request):
+    """Purchase STA tokens"""
+    try:
+        data = json.loads(request.body)
+        amount = int(data.get('amount', 0))
+        
+        if amount < 10:
+            return JsonResponse({
+                'success': False,
+                'error': 'Minimum purchase is 10 STA'
+            })
+        
+        user_wallet = get_object_or_404(UserWallet, user=request.user)
+        
+        # Process token transfer (this would integrate with your payment system)
+        process_buy = transfer_tokens(
+            recipient_id=user_wallet.recipient_id, 
+            amount=amount * 100  # Adjust for decimals
+        )
+        
+        if process_buy['status'] == "failed":
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to transfer STA. Please try again later.'
+            })
+        
+        # Record transaction
+        Transaction.objects.create(
+            wallet=user_wallet,
+            transaction_type='STA_PURCHASE',
+            amount=amount,
+            transaction_hash=process_buy.get('transaction_hash'),
+            status='completed'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{amount} STA transferred successfully to your account!',
+            'transaction_hash': process_buy.get('transaction_hash')
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def send_starpoints(request):
+    """Send STA tokens to another user"""
+    try:
+        data = json.loads(request.body)
+        recipient_id = data.get('recipient_id')
+        amount = int(data.get('amount', 0))
+        memo = data.get('memo', '')
+        
+        if not recipient_id or amount <= 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid recipient or amount'
+            })
+        
+        user_wallet = get_object_or_404(UserWallet, user=request.user)
+        
+        # Check balance
+        current_balance = get_balance(user_wallet.recipient_id)
+        if current_balance < amount:
+            return JsonResponse({
+                'success': False,
+                'error': f'Insufficient balance. You have {current_balance} STA'
+            })
+        
+        # Process transfer (this would use Hedera token transfer)
+        transfer_result = transfer_tokens(
+            recipient_id=recipient_id,
+            amount=amount * 100,  # Adjust for decimals
+            memo=memo
+        )
+        
+        if transfer_result['status'] == "failed":
+            return JsonResponse({
+                'success': False,
+                'error': 'Transfer failed. Please try again.'
+            })
+        
+        # Record transaction
+        Transaction.objects.create(
+            wallet=user_wallet,
+            transaction_type='STA_TRANSFER',
+            amount=-amount,  # Negative for outgoing
+            transaction_hash=transfer_result.get('transaction_hash'),
+            metadata={
+                'recipient': recipient_id,
+                'memo': memo
+            },
+            status='completed'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully sent {amount} STA to {recipient_id}',
+            'transaction_hash': transfer_result.get('transaction_hash')
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def transaction_history(request):
+    """Get transaction history with filtering"""
+    try:
+        filter_type = request.GET.get('filter', 'all')
+        user_wallet = get_object_or_404(UserWallet, user=request.user)
+        
+        transactions = Transaction.objects.filter(wallet=user_wallet)
+        
+        # Apply filters
+        if filter_type != 'all':
+            if filter_type == 'sta':
+                transactions = transactions.filter(transaction_type='STA_PURCHASE')
+            elif filter_type == 'tickets':
+                transactions = transactions.filter(transaction_type='TICKET_PURCHASE')
+            elif filter_type == 'hedera':
+                transactions = transactions.filter(transaction_type__in=['STA_TRANSFER', 'STA_REWARD'])
+            elif filter_type == 'rewards':
+                transactions = transactions.filter(transaction_type='REWARD')
+        
+        transactions = transactions.order_by('-created_at')[:20]
+        
+        return JsonResponse({
+            'success': True,
+            'transactions': [
+                {
+                    'id': tx.id,
+                    'type': tx.get_display_type(),
+                    'icon': tx.get_icon(),
+                    'amount': f"{'+' if tx.amount > 0 else ''}{tx.amount} STA",
+                    'value': f"{'+' if tx.amount > 0 else '-'}${abs(tx.amount * 0.10):.2f}",
+                    'date': tx.get_time_ago(),
+                    'category': tx.get_category(),
+                    'status': tx.status,
+                    'transaction_hash': tx.transaction_hash
+                } for tx in transactions
+            ]
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

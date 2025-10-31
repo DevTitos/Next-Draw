@@ -32,7 +32,7 @@ class PlayerProfile(models.Model):
     total_equity_earned = models.FloatField(default=0.0)
     
     # Currency and resources
-    stars = models.IntegerField(default=100)  # Premium currency - start with 100
+    stars = models.IntegerField(default=0)  # Premium currency - start with 100
     coins = models.IntegerField(default=1000)  # Regular currency
     
     # CEO Status

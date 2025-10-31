@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{% static 'css/wallet.css' %}">
     <link rel="stylesheet" href="{% static 'css/venture.css' %}">
     <link rel="stylesheet" href="{% static 'css/matrix.css' %}">
+    <link rel="stylesheet" href="{% static 'css/nft-engine.css' %}">
     <title>Next Star - Gaming Platform</title>
     <style>
         * {
@@ -1191,7 +1192,7 @@
                         <div class="balance-icon">⭐</div>
                         <div class="balance-info">
                             <div class="balance-label">Star Tokens (STA)</div>
-                            <div class="balance-amount" id="walletStars">100</div>
+                            <div class="balance-amount" id="walletStars">{{user.playerprofile.stars}}</div>
                             <div class="balance-value">$<span id="starsValue">10.00</span></div>
                         </div>
                     </div>
@@ -1200,14 +1201,14 @@
                         <div class="balance-info">
                             <div class="balance-label">Venture Tickets</div>
                             <div class="balance-amount" id="walletTickets">5</div>
-                            <div class="balance-value" id="ticketsValue">Active: 3</div>
+                            <div class="balance-value" id="ticketsValue">Active: 0</div>
                         </div>
                     </div>
                     <div class="balance-card">
                         <div class="balance-icon">💰</div>
                         <div class="balance-info">
                             <div class="balance-label">Game Coins</div>
-                            <div class="balance-amount" id="walletCoins">1,000</div>
+                            <div class="balance-amount" id="walletCoins">0</div>
                             <div class="balance-value">For in-game use</div>
                         </div>
                     </div>
@@ -1246,7 +1247,7 @@
                         <div class="info-row">
                             <span class="info-label">Account ID:</span>
                             <div class="info-value-container">
-                                <span class="info-value" id="hederaAccountId">0.0.1234567</span>
+                                <span class="info-value" id="hederaAccountId">{{user.wallet.recipient_id}}</span>
                                 <button class="copy-btn" onclick="walletEngine.copyToClipboard('hederaAccountId')" title="Copy Account ID">
                                     📋
                                 </button>
@@ -1256,7 +1257,7 @@
                         <div class="info-row">
                             <span class="info-label">Recipient ID:</span>
                             <div class="info-value-container">
-                                <span class="info-value" id="hederaRecipientId">{{ user.hedera_recipient_id|default:"0.0.0000000" }}</span>
+                                <span class="info-value" id="hederaRecipientId">{{ user.wallet.recipient_id }}</span>
                                 <button class="copy-btn" onclick="walletEngine.copyToClipboard('hederaRecipientId')" title="Copy Recipient ID">
                                     📋
                                 </button>
@@ -1265,7 +1266,7 @@
                         
                         <div class="info-row">
                             <span class="info-label">Network:</span>
-                            <span class="info-value">Hedera Mainnet</span>
+                            <span class="info-value">Hedera Testnet</span>
                         </div>
                         
                         <div class="info-row">
@@ -1517,59 +1518,185 @@
     </div>
 </div>
 
-    <!-- NFT Tickets Window -->
-    <div class="window" id="nftWindow">
-        <div class="window-header">
-            <div class="window-title">🖼️ NFT Tickets Collection</div>
-            <div class="window-controls">
-                <div class="window-control minimize" onclick="minimizeWindow('nftWindow')"></div>
-                <div class="window-control maximize" onclick="toggleMaximize('nftWindow')"></div>
-                <div class="window-control close" onclick="closeWindow('nftWindow')"></div>
-            </div>
+    <!-- Add this with your other windows -->
+<div class="window" id="nftTicketWindow" style="display: none;">
+    <div class="window-header">
+        <div class="window-title">🎫 CEO Selection NFT Tickets</div>
+        <div class="window-controls">
+            <div class="window-control minimize" onclick="minimizeWindow('nftTicketWindow')"></div>
+            <div class="window-control maximize" onclick="toggleMaximize('nftTicketWindow')"></div>
+            <div class="window-control close" onclick="closeWindow('nftTicketWindow')"></div>
         </div>
-        <div class="window-content">
-            <div class="nft-content">
-                <div class="nft-stats">
-                    <div class="nft-stat">
-                        <div class="nft-stat-value" id="nftTotal">3</div>
-                        <div class="nft-stat-label">Total NFTs</div>
+    </div>
+    <div class="window-content">
+        <div class="nft-ticket-container">
+            <!-- Project Info Section -->
+            <div class="project-info-section" id="projectInfoSection" style="display: none;">
+                <div class="project-header">
+                    <h3 id="projectName">Project Name</h3>
+                    <p id="projectVision" class="project-vision"></p>
+                </div>
+                <div class="project-stats">
+                    <div class="project-stat">
+                        <span class="stat-label">Domain:</span>
+                        <span class="stat-value" id="projectDomain"></span>
                     </div>
-                    <div class="nft-stat">
-                        <div class="nft-stat-value" id="nftRare">1</div>
-                        <div class="nft-stat-label">Rare</div>
-                    </div>
-                    <div class="nft-stat">
-                        <div class="nft-stat-value" id="nftEpic">0</div>
-                        <div class="nft-stat-label">Epic</div>
+                    <div class="project-stat">
+                        <span class="stat-label">Status:</span>
+                        <span class="stat-value" id="projectStatus"></span>
                     </div>
                 </div>
+            </div>
 
-                <div class="nft-grid">
-                    <div class="nft-card">
-                        <div class="nft-image">🎫</div>
-                        <div class="nft-info">
-                            <div class="nft-name">Starter Ticket</div>
-                            <div class="nft-rarity common">Common</div>
+            <!-- Ticket Selection Section -->
+            <div class="ticket-selection-section" id="ticketSelectionSection">
+                <h3>Select Your Ticket Type</h3>
+                <div class="ticket-grid">
+                    <div class="ticket-card" data-type="standard" onclick="nftEngine.selectTicket('standard')">
+                        <div class="ticket-header">
+                            <h4>Standard</h4>
+                            <div class="price">10 HBAR</div>
                         </div>
+                        <div class="ticket-features">
+                            <div class="feature">✓ Access to CEO Matrix Challenge</div>
+                            <div class="feature">✓ Basic voting rights</div>
+                            <div class="feature">✓ Progress tracking</div>
+                        </div>
+                        <button class="ticket-select-btn">Select</button>
                     </div>
-                    <div class="nft-card">
-                        <div class="nft-image">⚡</div>
-                        <div class="nft-info">
-                            <div class="nft-name">Energy Venture Pass</div>
-                            <div class="nft-rarity rare">Rare</div>
+                    
+                    <div class="ticket-card premium" data-type="premium" onclick="nftEngine.selectTicket('premium')">
+                        <div class="ticket-header">
+                            <h4>Premium</h4>
+                            <div class="price">25 HBAR</div>
                         </div>
+                        <div class="ticket-features">
+                            <div class="feature">✓ All Standard benefits</div>
+                            <div class="feature">✓ Enhanced voting power</div>
+                            <div class="feature">✓ Priority support</div>
+                            <div class="feature">✓ Advanced analytics</div>
+                        </div>
+                        <button class="ticket-select-btn">Select</button>
                     </div>
-                    <div class="nft-card">
-                        <div class="nft-image">🌱</div>
-                        <div class="nft-info">
-                            <div class="nft-name">Quantum Farms Access</div>
-                            <div class="nft-rarity common">Common</div>
+                    
+                    <div class="ticket-card vip" data-type="vip" onclick="nftEngine.selectTicket('vip')">
+                        <div class="ticket-header">
+                            <h4>VIP</h4>
+                            <div class="price">100 HBAR</div>
                         </div>
+                        <div class="ticket-features">
+                            <div class="feature">✓ All Premium benefits</div>
+                            <div class="feature">✓ Maximum voting power</div>
+                            <div class="feature">✓ Exclusive insights</div>
+                            <div class="feature">✓ Direct CEO support</div>
+                            <div class="feature">✓ Early access to features</div>
+                        </div>
+                        <button class="ticket-select-btn">Select</button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Purchase Section -->
+            <div class="purchase-section" id="purchaseSection" style="display: none;">
+                <h3>Confirm Your Purchase</h3>
+                <div class="purchase-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Ticket Type:</span>
+                        <span class="detail-value" id="selectedTicketType"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Price:</span>
+                        <span class="detail-value" id="selectedTicketPrice"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Project:</span>
+                        <span class="detail-value" id="selectedProjectName"></span>
+                    </div>
+                </div>
+                
+                <div class="wallet-info">
+                    <h4>Hedera Wallet Information</h4>
+                    <p>Your NFT ticket will be minted and transferred to your Hedera account.</p>
+                    <div class="account-status">
+                        <div class="status-indicator"></div>
+                        <span>Preparing your account...</span>
+                    </div>
+                </div>
+                
+                <div class="purchase-actions">
+                    <button class="btn-secondary" onclick="nftEngine.backToSelection()">Back</button>
+                    <button class="btn-primary" onclick="nftEngine.purchaseTicket()">
+                        Purchase Ticket
+                    </button>
+                </div>
+            </div>
+
+            <!-- Purchase Status Section -->
+            <div class="purchase-status-section" id="purchaseStatusSection" style="display: none;">
+                <div class="status-content">
+                    <div class="status-icon" id="statusIcon">⏳</div>
+                    <h3 id="statusTitle">Processing Purchase</h3>
+                    <p id="statusMessage">Your NFT ticket is being created...</p>
+                    
+                    <div class="progress-steps">
+                        <div class="step active" id="step1">
+                            <div class="step-number">1</div>
+                            <div class="step-text">Creating NFT</div>
+                        </div>
+                        <div class="step" id="step2">
+                            <div class="step-number">2</div>
+                            <div class="step-text">Minting Ticket</div>
+                        </div>
+                        <div class="step" id="step3">
+                            <div class="step-number">3</div>
+                            <div class="step-text">Setting up Account</div>
+                        </div>
+                        <div class="step" id="step4">
+                            <div class="step-number">4</div>
+                            <div class="step-text">Transferring NFT</div>
+                        </div>
+                    </div>
+                    
+                    <div class="transaction-details" id="transactionDetails" style="display: none;">
+                        <h4>Transaction Details</h4>
+                        <div class="detail-item">
+                            <span>NFT Token ID:</span>
+                            <span id="nftTokenId"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Serial Number:</span>
+                            <span id="nftSerial"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Your Account ID:</span>
+                            <span id="userAccountId"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="status-actions">
+                        <button class="btn-primary" id="successBtn" onclick="nftEngine.handlePurchaseSuccess()" style="display: none;">
+                            Access Matrix Challenge
+                        </button>
+                        <button class="btn-secondary" id="retryBtn" onclick="nftEngine.retryPurchase()" style="display: none;">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Tickets Section -->
+            <div class="user-tickets-section" id="userTicketsSection" style="display: none;">
+                <h3>Your Active Tickets</h3>
+                <div class="tickets-list" id="ticketsList">
+                    <!-- Tickets will be populated here -->
+                </div>
+                <button class="btn-secondary" onclick="nftEngine.backToSelection()">
+                    Back to Selection
+                </button>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Shares Window -->
     <div class="window" id="sharesWindow">
@@ -1754,6 +1881,7 @@
     <script src="{% static 'js/wallet-engine.js' %}"></script>
     <script src="{% static 'js/venture-game-engine.js' %}"></script>
     <script src="{% static 'js/matrix-engine.js' %}"></script>
+    <script src="{% static 'js/nft-engine.js' %}"></script>
     
     <script>
         // Window Management

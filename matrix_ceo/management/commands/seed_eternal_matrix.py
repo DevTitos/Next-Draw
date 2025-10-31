@@ -4,147 +4,146 @@ from django.contrib.auth.models import User
 from matrix_ceo.models import CorporateBoard, StrategicProject
 from django.utils import timezone
 import random
+# matrix_ceo/management/commands/seed_eternal_matrix.py
 
 class Command(BaseCommand):
-    help = 'Seed eternal matrix with strategic projects'
-
     def handle(self, *args, **options):
-        self.stdout.write('Seeding Eternal Matrix data...')
+        self.stdout.write('Seeding Eternal Matrix with BUSINESS puzzles...')
         
         # Create Corporate Board
         board, created = CorporateBoard.objects.get_or_create(
-            name="Next Star Strategic Governance Board",
+            name="Global Business Leadership Board",
             defaults={
-                'description': 'Oversight board for executive-level project selection and CEO governance',
-                'governance_token': 'NEXT-STAR-GOV-2024'
+                'description': 'Oversight board for executive-level business challenges and CEO selection',
+                'governance_token': 'BUSINESS-GOV-2024'
             }
         )
         
-        # Create Strategic Projects
+        # Create Business-Focused Strategic Projects
         strategic_projects = [
             {
-                'name': 'Quantum Neural Interface Corporation',
-                'domain': 'AI',
-                'vision_statement': 'Pioneering the next generation of human-AI symbiosis through advanced non-invasive neural interfaces that enhance cognitive capabilities while maintaining ethical boundaries and human agency.',
+                'name': 'Urban Mobility Solutions Inc.',
+                'domain': 'Transportation',  # ✅ BUSINESS DOMAIN
+                'vision_statement': 'Revolutionize urban transportation through integrated mobility platforms that reduce congestion and improve accessibility in major metropolitan areas.',
                 'mission_objectives': [
-                    'Develop non-invasive BCI with 95% accuracy by 2026',
-                    'Establish comprehensive ethical framework for human augmentation',
-                    'Secure FDA approval for medical rehabilitation applications',
-                    'Build developer ecosystem with 1000+ applications by 2027'
+                    'Deploy in 50 cities across 3 continents by 2026',
+                    'Achieve 30% reduction in urban commute times',
+                    'Build partnerships with 100+ municipal governments',
+                    'Create sustainable revenue model with 40% margins'
                 ],
                 'success_metrics': {
-                    'user_adoption': '1M+ active users by 2027',
-                    'revenue_growth': '$500M ARR by 2028',
-                    'innovation_index': '50+ patents filed annually',
-                    'safety_rating': '99.99% uptime with zero critical failures'
+                    'user_adoption': '10M+ monthly active users by 2027',
+                    'revenue_growth': '$800M ARR by 2028',
+                    'city_partnerships': '200+ municipal contracts',
+                    'environmental_impact': 'Reduce CO2 emissions by 1M tons annually'
                 },
                 'ceo_compensation': {
-                    'equity_shares': 1500000,
-                    'base_salary': 450000,
-                    'performance_bonus': 'up to 200% of base',
-                    'long_term_incentives': 'stock options vesting over 4 years'
+                    'equity_shares': 1200000,
+                    'base_salary': 420000,
+                    'performance_bonus': 'up to 180% of base',
+                    'impact_bonus': 'tied to environmental and social metrics'
                 },
                 'strategic_challenges': [
-                    'Navigating evolving neurotech regulations across 50+ countries',
-                    'Addressing ethical concerns about cognitive enhancement',
-                    'Competing with tech giants entering the neurotech space',
-                    'Attracting and retaining specialized neuroscience talent'
+                    'Navigating complex regulatory environments across different countries',
+                    'Competing with ride-sharing giants and public transit systems',
+                    'Managing capital-intensive infrastructure deployment',
+                    'Balancing profitability with social impact goals'
                 ],
                 'critical_decisions': [
-                    'Build proprietary hardware vs partner with existing manufacturers',
-                    'Focus on medical applications first vs direct-to-consumer',
-                    'Open source the API ecosystem vs keep proprietary',
-                    'Global expansion timing and market prioritization'
+                    'Focus on developed markets vs emerging economies first',
+                    'Build proprietary technology vs partner with existing providers',
+                    'Pricing strategy: premium service vs mass market accessibility',
+                    'Expansion timing: rapid scale vs sustainable growth'
                 ],
                 'risk_factors': {
-                    'regulatory': 'Very High - Unclear neurotech regulations',
-                    'technical': 'Extreme - Unproven technology at scale',
-                    'market': 'High - Unclear consumer demand patterns',
-                    'ethical': 'Extreme - Public perception and moral concerns'
+                    'regulatory': 'High - Transportation is heavily regulated',
+                    'competitive': 'Very High - Established players with deep pockets',
+                    'financial': 'High - Capital intensive business model',
+                    'reputation': 'Medium - Public safety and privacy concerns'
                 },
                 'complexity': 'executive'
             },
             {
-                'name': 'Decentralized Autonomous Energy Grid',
-                'domain': 'Blockchain',
-                'vision_statement': 'Democratizing energy distribution through blockchain-enabled community microgrids that empower local communities, accelerate renewable adoption, and create resilient energy infrastructure.',
+                'name': 'Sustainable Agriculture Network',
+                'domain': 'Agriculture',  # ✅ BUSINESS DOMAIN
+                'vision_statement': 'Transform global food systems through technology-enabled sustainable agriculture that increases yields while reducing environmental impact.',
                 'mission_objectives': [
-                    'Deploy 1000+ community microgrids across 50 countries by 2027',
-                    'Achieve 40% reduction in energy costs for participating communities',
-                    'Integrate 5GW of renewable capacity into the network',
-                    'Establish token-based energy trading as industry standard'
+                    'Partner with 10,000 farms across 20 countries by 2027',
+                    'Increase crop yields by 25% while reducing water usage by 40%',
+                    'Create transparent supply chain from farm to consumer',
+                    'Achieve profitability while maintaining 30% lower environmental impact'
                 ],
                 'success_metrics': {
-                    'grid_reliability': '99.99% uptime across entire network',
-                    'cost_reduction': '30-50% lower than traditional utilities',
-                    'renewable_adoption': '80% of energy from renewable sources',
-                    'community_impact': '500K+ households served with clean energy'
+                    'farmer_partnerships': '10,000+ participating farms',
+                    'yield_improvement': '25% average increase',
+                    'water_savings': '40% reduction in usage',
+                    'supply_chain_efficiency': '50% faster farm-to-market'
                 },
                 'ceo_compensation': {
-                    'equity_shares': 1200000,
+                    'equity_shares': 1000000,
                     'base_salary': 380000,
                     'performance_bonus': 'up to 150% of base',
-                    'impact_bonus': 'tied to renewable adoption and community metrics'
+                    'sustainability_bonus': 'tied to environmental impact metrics'
                 },
                 'strategic_challenges': [
-                    'Navigating legacy utility regulations and political resistance',
-                    'Securing infrastructure funding at global scale',
-                    'Managing decentralized governance of energy assets',
-                    'Ensuring grid stability with intermittent renewable sources'
+                    'Convincing traditional farmers to adopt new technologies',
+                    'Managing seasonal and climate-related uncertainties',
+                    'Building trust across complex supply chains',
+                    'Balancing technology costs with farmer affordability'
                 ],
                 'critical_decisions': [
-                    'Prioritize developed markets vs emerging economies',
-                    'Balance community control vs operational efficiency needs',
-                    'Select technology stack for 20-year scalability',
-                    'Partnership strategy with existing energy providers'
+                    'Focus on high-value crops vs staple foods',
+                    'Technology licensing model vs full integration',
+                    'Geographic expansion strategy',
+                    'Partnership approach with agricultural corporations'
                 ],
                 'risk_factors': {
-                    'regulatory': 'Extreme - Utilities are heavily regulated',
-                    'technical': 'Very High - Integrating legacy and modern systems',
-                    'financial': 'Very High - Capital intensive infrastructure',
-                    'political': 'High - Energy is politically sensitive worldwide'
+                    'climate': 'Very High - Weather and climate dependencies',
+                    'adoption': 'High - Resistance to change in traditional industry',
+                    'supply_chain': 'High - Complex global logistics',
+                    'commodity_prices': 'Medium - Market volatility'
                 },
                 'complexity': 'senior'
             },
             {
-                'name': 'Synthetic Biology Therapeutics Platform',
-                'domain': 'Biotech',
-                'vision_statement': 'Revolutionizing medicine through programmable biology and synthetic therapeutics that address previously untreatable genetic conditions with personalized, cost-effective solutions.',
+                'name': 'Healthcare Access Platform',
+                'domain': 'Healthcare',  # ✅ BUSINESS DOMAIN
+                'vision_statement': 'Democratize healthcare access through technology platforms that connect patients with providers and streamline medical services delivery.',
                 'mission_objectives': [
-                    'Develop 10 novel synthetic biology therapies by 2028',
-                    'Reduce gene therapy costs by 80% through platform approach',
-                    'Achieve regulatory approval in US, EU, and Asian markets',
-                    'Build automated manufacturing for personalized therapies'
+                    'Serve 5 million patients across underserved regions by 2026',
+                    'Reduce healthcare delivery costs by 35% through technology',
+                    'Partner with 500+ healthcare providers and insurers',
+                    'Maintain 99.9% platform reliability for critical services'
                 ],
                 'success_metrics': {
-                    'patient_impact': 'Treat 50,000+ patients by 2030',
-                    'cost_efficiency': '80% reduction in therapy costs',
-                    'regulatory_success': '3+ major market approvals by 2027',
-                    'innovation_pipeline': '20+ therapies in development'
+                    'patient_impact': '5M+ patients served',
+                    'cost_reduction': '35% lower delivery costs',
+                    'provider_network': '500+ healthcare partners',
+                    'service_reliability': '99.9% uptime'
                 },
                 'ceo_compensation': {
-                    'equity_shares': 1800000,
-                    'base_salary': 520000,
-                    'performance_bonus': 'up to 250% of base',
-                    'milestone_bonuses': 'tied to regulatory and clinical successes'
+                    'equity_shares': 1500000,
+                    'base_salary': 480000,
+                    'performance_bonus': 'up to 200% of base',
+                    'impact_bonus': 'tied to patient outcomes and access metrics'
                 },
                 'strategic_challenges': [
-                    'Navigating complex FDA and international regulatory pathways',
-                    'Managing ethical concerns around genetic engineering',
-                    'Securing long-term funding for clinical trials',
-                    'Building manufacturing at scale for personalized medicine'
+                    'Navigating complex healthcare regulations across jurisdictions',
+                    'Building trust with both patients and medical professionals',
+                    'Managing data privacy and security for sensitive health information',
+                    'Creating sustainable business model in price-sensitive markets'
                 ],
                 'critical_decisions': [
-                    'Focus on rare diseases vs common conditions first',
-                    'Build vs partner for clinical trial capabilities',
-                    'IP strategy: patent broadly vs open science approach',
-                    'Pricing model for global accessibility vs profitability'
+                    'Focus on specific medical specialties vs comprehensive care',
+                    'B2B partnerships with insurers vs direct-to-consumer approach',
+                    'Geographic market prioritization',
+                    'Technology build vs buy decisions for specialized medical features'
                 ],
                 'risk_factors': {
-                    'regulatory': 'Extreme - Evolving genetic medicine regulations',
-                    'technical': 'Very High - Unproven at commercial scale',
-                    'ethical': 'Very High - Public concerns about genetic engineering',
-                    'clinical': 'High - Uncertain trial outcomes'
+                    'regulatory': 'Extreme - Healthcare is highly regulated',
+                    'liability': 'Very High - Medical malpractice and data privacy risks',
+                    'adoption': 'High - Resistance from established healthcare systems',
+                    'technical': 'High - Complex integration requirements'
                 },
                 'complexity': 'executive'
             }
@@ -159,25 +158,4 @@ class Command(BaseCommand):
             
             if created:
                 project.approve_project()
-                self.stdout.write(self.style.SUCCESS(f'Created strategic project: {project.name}'))
-
-        self.stdout.write(self.style.SUCCESS('\n🎯 Eternal Matrix seeding complete!'))
-        self.print_summary()
-
-    def print_summary(self):
-        self.stdout.write('\n' + '='*60)
-        self.stdout.write('ETERNAL MATRIX STRATEGIC PROJECTS SUMMARY')
-        self.stdout.write('='*60)
-        
-        projects = StrategicProject.objects.all()
-        for project in projects:
-            self.stdout.write(f"\n📊 {project.name}")
-            self.stdout.write(f"   Domain: {project.domain}")
-            self.stdout.write(f"   Status: {project.get_status_display()}")
-            self.stdout.write(f"   Complexity: {project.get_complexity_display()}")
-            self.stdout.write(f"   CEO Compensation: {project.ceo_compensation['equity_shares']:,} shares + ${project.ceo_compensation['base_salary']:,}")
-            
-        self.stdout.write(f"\n🌌 READY FOR CEO CANDIDATES:")
-        self.stdout.write(f"   Total Projects: {projects.count()}")
-        self.stdout.write(f"   Executive Level: {projects.filter(complexity='executive').count()}")
-        self.stdout.write(f"   Senior Level: {projects.filter(complexity='senior').count()}")
+                self.stdout.write(self.style.SUCCESS(f'Created business project: {project.name}'))

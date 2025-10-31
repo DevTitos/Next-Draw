@@ -8,4 +8,10 @@ urlpatterns = [
     path('api/community/events/', views.api_community_events, name='api_community_events'),
     path('api/community/events/<int:event_id>/join/', views.api_join_event, name='api_join_event'),
     path('api/community/stats/', views.api_governance_stats, name='api_governance_stats'),
+
+    path('overview/', views.wallet_overview, name='wallet_overview'),
+    path('hedera/', views.hedera_data, name='hedera_data'),
+    path('buy-sta/', views.buy_starpoints, name='buy_starpoints'),
+    path('send-sta/', views.send_starpoints, name='send_starpoints'),
+    path('transactions/', views.transaction_history, name='transaction_history'),
 ]

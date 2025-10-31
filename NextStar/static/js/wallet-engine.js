@@ -1,15 +1,175 @@
-// wallet-engine.js
+// static/js/wallet-engine.js
 class WalletEngine {
     constructor() {
         this.currentTab = 'overview';
         this.currentPaymentMethod = 'card';
         this.selectedCrypto = null;
         this.staPrice = 0.10; // $0.10 per STA
+        this.apiBase = '/wallet/api';
     }
 
-    init() {
-        this.loadWalletData();
+    async init() {
+        console.log('💰 Initializing Wallet Engine...');
+        await this.loadWalletData();
         this.setupEventListeners();
+    }
+
+    async makeRequest(endpoint, options = {}) {
+        const url = `${this.apiBase}${endpoint}`;
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.getCSRFToken(),
+            },
+            credentials: 'include',
+            ...options
+        };
+
+        try {
+            const response = await fetch(url, config);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Network error');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Wallet API request failed:', error);
+            this.showNotification(`API Error: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    getCSRFToken() {
+        const cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+        return cookieValue || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    }
+
+    async loadWalletData() {
+        try {
+            const response = await this.makeRequest('/overview/');
+            if (response.success) {
+                this.updateWalletUI(response.wallet_data);
+                this.updateTransactionList(response.recent_transactions);
+            } else {
+                this.showNotification('Failed to load wallet data', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading wallet data:', error);
+        }
+    }
+
+    async loadHederaData() {
+        try {
+            const response = await this.makeRequest('/hedera/');
+            if (response.success) {
+                this.updateHederaUI(response.hedera_data);
+                this.updateHederaTransactionList(response.transactions);
+            } else {
+                this.showNotification('Failed to load Hedera data', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading Hedera data:', error);
+        }
+    }
+
+    async loadTransactionHistory(filter = 'all') {
+        try {
+            const response = await this.makeRequest(`/transactions/?filter=${filter}`);
+            if (response.success) {
+                this.updateTransactionList(response.transactions);
+            } else {
+                this.showNotification('Failed to load transactions', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading transactions:', error);
+        }
+    }
+
+    updateWalletUI(walletData) {
+        if (!walletData) return;
+
+        const elements = {
+            'walletStars': walletData.starpoints,
+            'walletTickets': walletData.tickets,
+            'walletCoins': walletData.coins.toLocaleString(),
+            'starsValue': (walletData.starpoints * this.staPrice).toFixed(2),
+            'ticketsValue': `Active: ${walletData.tickets}`
+        };
+
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        });
+    }
+
+    updateHederaUI(hederaData) {
+        if (!hederaData) return;
+
+        const elements = {
+            'hederaAccountId': hederaData.account_id,
+            'hederaRecipientId': hederaData.recipient_id,
+            'hederaBalance': hederaData.balance
+        };
+
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        });
+    }
+
+    updateTransactionList(transactions) {
+        const container = document.getElementById('transactionList');
+        if (!container) return;
+
+        if (!transactions || transactions.length === 0) {
+            container.innerHTML = '<div class="no-transactions">No transactions found</div>';
+            return;
+        }
+
+        container.innerHTML = transactions.map(tx => `
+            <div class="transaction-item">
+                <div class="transaction-icon">${tx.icon || '💰'}</div>
+                <div class="transaction-details">
+                    <div class="transaction-title">${tx.type}</div>
+                    <div class="transaction-date">${tx.date}</div>
+                    ${tx.transaction_hash ? `
+                        <div class="transaction-hash" title="${tx.transaction_hash}">
+                            ${tx.transaction_hash.slice(0, 16)}...
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="transaction-amount ${tx.amount.startsWith('+') ? 'positive' : 'negative'}">
+                    ${tx.amount}<br>
+                    <small>${tx.value}</small>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    updateHederaTransactionList(transactions) {
+        const container = document.getElementById('hederaTransactionList');
+        if (!container) return;
+
+        if (!transactions || transactions.length === 0) {
+            container.innerHTML = '<div class="no-transactions">No Hedera transactions</div>';
+            return;
+        }
+
+        container.innerHTML = transactions.map(tx => `
+            <div class="transaction-item">
+                <div class="transaction-icon">⚡</div>
+                <div class="transaction-details">
+                    <div class="transaction-title">${tx.type}</div>
+                    <div class="transaction-date">${tx.date}</div>
+                </div>
+                <div class="transaction-amount ${tx.amount.startsWith('+') ? 'positive' : 'negative'}">
+                    ${tx.amount}
+                </div>
+            </div>
+        `).join('');
     }
 
     switchTab(tabName) {
@@ -24,10 +184,13 @@ class WalletEngine {
         });
         
         // Show selected tab
-        document.getElementById(`wallet${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`).classList.add('active');
+        const targetTab = document.getElementById(`wallet${this.capitalizeFirst(tabName)}Tab`);
+        if (targetTab) targetTab.classList.add('active');
         
         // Activate selected tab button
-        event.target.classList.add('active');
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
         
         this.currentTab = tabName;
         
@@ -54,98 +217,64 @@ class WalletEngine {
         });
         
         // Show selected payment method
-        document.getElementById(`${method}Payment`).style.display = 'block';
+        const targetMethod = document.getElementById(`${method}Payment`);
+        if (targetMethod) targetMethod.style.display = 'block';
         
         // Activate selected payment tab
-        event.target.classList.add('active');
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
         
         this.currentPaymentMethod = method;
     }
 
-    // Hedera Functions
-    loadHederaData() {
-        // In a real implementation, this would fetch from your backend
-        const hederaData = {
-            accountId: '0.0.1234567',
-            recipientId: '{{ user.hedera_recipient_id }}',
-            balance: '125.75',
-            recentTransactions: [
-                { id: '1', type: 'STA Purchase', amount: '+100 STA', date: '2 hours ago' },
-                { id: '2', type: 'Ticket Purchase', amount: '-5 STA', date: '1 day ago' },
-                { id: '3', type: 'Reward', amount: '+25 STA', date: '2 days ago' }
-            ]
-        };
-
-        document.getElementById('hederaAccountId').textContent = hederaData.accountId;
-        document.getElementById('hederaRecipientId').textContent = hederaData.recipientId;
-        document.getElementById('hederaBalance').textContent = hederaData.balance;
-
-        this.updateHederaTransactionList(hederaData.recentTransactions);
-    }
-
-    copyToClipboard(elementId) {
-        const text = document.getElementById(elementId).textContent;
-        navigator.clipboard.writeText(text).then(() => {
-            this.showNotification('Copied to clipboard!', 'success');
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-            this.showNotification('Failed to copy', 'error');
-        });
-    }
-
-    openExplorer(type) {
-        const accountId = document.getElementById('hederaAccountId').textContent;
-        let url = '';
-        
-        switch(type) {
-            case 'account':
-                url = `https://hashscan.io/mainnet/account/${accountId}`;
-                break;
-            case 'transactions':
-                url = `https://hashscan.io/mainnet/account/${accountId}?transactionType=CRYPTOTRANSFER`;
-                break;
-            case 'tokens':
-                url = `https://hashscan.io/mainnet/token/0.0.123456`; // Replace with actual STA token ID
-                break;
-        }
-        
-        window.open(url, '_blank');
-    }
-
     // STA Purchase Functions
     calculateTotal() {
-        const staAmount = parseFloat(document.getElementById('staAmount').value) || 0;
+        const staAmount = parseFloat(document.getElementById('staAmount')?.value) || 0;
         const totalCost = staAmount * this.staPrice;
         
-        document.getElementById('previewSTA').textContent = staAmount;
-        document.getElementById('totalCost').textContent = totalCost.toFixed(2);
-        document.getElementById('finalAmount').textContent = totalCost.toFixed(2);
+        this.updateElement('previewSTA', staAmount);
+        this.updateElement('totalCost', totalCost.toFixed(2));
+        this.updateElement('finalAmount', totalCost.toFixed(2));
     }
 
     calculateBankTotal() {
-        const staAmount = parseFloat(document.getElementById('bankSTA').value) || 0;
+        const staAmount = parseFloat(document.getElementById('bankSTA')?.value) || 0;
         const totalCost = staAmount * this.staPrice;
-        document.getElementById('bankTotal').textContent = totalCost.toFixed(2);
+        this.updateElement('bankTotal', totalCost.toFixed(2));
     }
 
-    processSTAPurchase(method) {
-        const staAmount = parseFloat(document.getElementById('staAmount').value) || 0;
+    async processSTAPurchase(method) {
+        const staAmount = parseFloat(document.getElementById('staAmount')?.value) || 0;
         
         if (staAmount < 10) {
             this.showNotification('Minimum purchase is 10 STA', 'error');
             return;
         }
 
-        // Simulate purchase processing
-        this.showNotification(`Processing ${staAmount} STA purchase...`, 'info');
-        
-        // In real implementation, integrate with payment processor
-        setTimeout(() => {
-            this.showNotification(`Successfully purchased ${staAmount} STA!`, 'success');
-            this.loadWalletData(); // Refresh wallet data
-        }, 2000);
+        try {
+            const response = await this.makeRequest('/buy-sta/', {
+                method: 'POST',
+                body: JSON.stringify({ amount: staAmount })
+            });
+
+            if (response.success) {
+                this.showNotification(response.message, 'success');
+                await this.loadWalletData(); // Refresh wallet data
+                
+                // Reset form
+                const staAmountInput = document.getElementById('staAmount');
+                if (staAmountInput) staAmountInput.value = '';
+                this.calculateTotal();
+            } else {
+                this.showNotification(response.error, 'error');
+            }
+        } catch (error) {
+            console.error('STA purchase failed:', error);
+        }
     }
 
+    // Crypto Functions
     selectCrypto(crypto) {
         this.selectedCrypto = crypto;
         
@@ -153,12 +282,16 @@ class WalletEngine {
         document.querySelectorAll('.crypto-option').forEach(option => {
             option.classList.remove('selected');
         });
-        event.target.classList.add('selected');
+        
+        if (event && event.target) {
+            event.target.classList.add('selected');
+        }
         
         // Show payment details
-        document.getElementById('cryptoPaymentDetails').style.display = 'block';
+        const paymentDetails = document.getElementById('cryptoPaymentDetails');
+        if (paymentDetails) paymentDetails.style.display = 'block';
         
-        // Set crypto-specific details (in real app, get from backend)
+        // Set crypto-specific details
         const addresses = {
             'BTC': 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
             'ETH': '0x742d35Cc6634C0532925a3b8Df59C5C85C2b1a1c',
@@ -166,10 +299,10 @@ class WalletEngine {
             'USDC': '0x742d35Cc6634C0532925a3b8Df59C5C85C2b1a1c'
         };
         
-        document.getElementById('cryptoAddress').textContent = addresses[crypto];
+        this.updateElement('cryptoAddress', addresses[crypto] || '');
         
         // Calculate crypto amount
-        const staAmount = parseFloat(document.getElementById('staAmount').value) || 0;
+        const staAmount = parseFloat(document.getElementById('staAmount')?.value) || 0;
         const totalUSD = staAmount * this.staPrice;
         this.updateCryptoAmount(totalUSD, crypto);
     }
@@ -179,156 +312,166 @@ class WalletEngine {
     }
 
     updateCryptoAmount(usdAmount, crypto) {
-        // This would use real exchange rates in production
+        // Example exchange rates (in production, fetch from API)
         const rates = {
-            'BTC': 0.000023, // Example rate
+            'BTC': 0.000023,
             'ETH': 0.00032,
             'HBAR': 25,
             'USDC': 1
         };
         
-        const cryptoAmount = usdAmount * rates[crypto];
-        document.getElementById('cryptoAmount').textContent = `${cryptoAmount.toFixed(8)} ${crypto}`;
+        const cryptoAmount = usdAmount * (rates[crypto] || 1);
+        this.updateElement('cryptoAmount', `${cryptoAmount.toFixed(8)} ${crypto}`);
+    }
+
+    // Send/Receive Functions
+    async confirmSend() {
+        const recipient = document.getElementById('sendTo')?.value;
+        const amount = parseFloat(document.getElementById('sendAmount')?.value);
+        const memo = document.getElementById('sendMemo')?.value;
+
+        if (!recipient || !amount || amount <= 0) {
+            this.showNotification('Please fill in all required fields with valid amounts', 'error');
+            return;
+        }
+
+        if (!this.isValidHederaAccountId(recipient)) {
+            this.showNotification('Invalid Hedera account ID format (should be 0.0.1234567)', 'error');
+            return;
+        }
+
+        try {
+            const response = await this.makeRequest('/send-sta/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    recipient_id: recipient,
+                    amount: amount,
+                    memo: memo || ''
+                })
+            });
+
+            if (response.success) {
+                this.showNotification(response.message, 'success');
+                this.closeSendModal();
+                await this.loadWalletData(); // Refresh balances
+            } else {
+                this.showNotification(response.error, 'error');
+            }
+        } catch (error) {
+            console.error('Send failed:', error);
+        }
     }
 
     // Modal Functions
     showSendModal() {
-        document.getElementById('sendModal').style.display = 'flex';
+        this.showModal('sendModal');
+        // Clear previous inputs
+        this.clearInput('sendTo');
+        this.clearInput('sendAmount');
+        this.clearInput('sendMemo');
     }
 
     closeSendModal() {
-        document.getElementById('sendModal').style.display = 'none';
+        this.hideModal('sendModal');
     }
 
     showReceiveModal() {
-        document.getElementById('receiveModal').style.display = 'flex';
+        this.showModal('receiveModal');
     }
 
     closeReceiveModal() {
-        document.getElementById('receiveModal').style.display = 'none';
+        this.hideModal('receiveModal');
+    }
+
+    showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'flex';
+    }
+
+    hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'none';
+    }
+
+    // Utility Functions
+    copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        const text = element.textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            this.showNotification('Copied to clipboard!', 'success');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            this.showNotification('Failed to copy to clipboard', 'error');
+        });
     }
 
     copyReceiveAddress() {
         this.copyToClipboard('receiveAddress');
     }
 
-    confirmSend() {
-        const recipient = document.getElementById('sendTo').value;
-        const amount = parseFloat(document.getElementById('sendAmount').value);
-        const memo = document.getElementById('sendMemo').value;
+    openExplorer(type) {
+        const accountId = document.getElementById('hederaAccountId')?.textContent;
+        if (!accountId) return;
 
-        if (!recipient || !amount) {
-            this.showNotification('Please fill in all required fields', 'error');
-            return;
-        }
-
-        // Validate Hedera account ID format
-        if (!this.isValidHederaAccountId(recipient)) {
-            this.showNotification('Invalid Hedera account ID format', 'error');
-            return;
-        }
-
-        // Simulate transaction
-        this.showNotification(`Sending ${amount} STA to ${recipient}...`, 'info');
+        const baseUrl = 'https://hashscan.io/mainnet';
+        let url = '';
         
-        setTimeout(() => {
-            this.showNotification('Transaction submitted successfully!', 'success');
-            this.closeSendModal();
-            this.loadWalletData();
-        }, 2000);
+        switch(type) {
+            case 'account':
+                url = `${baseUrl}/account/${accountId}`;
+                break;
+            case 'transactions':
+                url = `${baseUrl}/account/${accountId}?transactionType=CRYPTOTRANSFER`;
+                break;
+            case 'tokens':
+                url = `${baseUrl}/token/0.0.123456`; // Replace with actual STA token ID
+                break;
+        }
+        
+        if (url) window.open(url, '_blank');
     }
 
+    filterTransactions() {
+        const filter = document.getElementById('transactionFilter')?.value || 'all';
+        this.loadTransactionHistory(filter);
+    }
+
+    confirmBankTransfer() {
+        const staAmount = parseFloat(document.getElementById('bankSTA')?.value) || 0;
+        
+        if (staAmount < 10) {
+            this.showNotification('Minimum purchase is 10 STA', 'error');
+            return;
+        }
+
+        this.showNotification('Bank transfer instructions sent! Please allow 1-3 business days for processing.', 'info');
+        
+        // Reset form
+        const bankInput = document.getElementById('bankSTA');
+        if (bankInput) bankInput.value = '';
+        this.calculateBankTotal();
+    }
+
+    // Validation
     isValidHederaAccountId(accountId) {
         return /^\d+\.\d+\.\d+$/.test(accountId);
     }
 
-    // Data Loading Functions
-    loadWalletData() {
-        // Simulate API call to get wallet data
-        const walletData = {
-            stars: 100,
-            tickets: 5,
-            coins: 1000,
-            starsValue: 10.00,
-            activeTickets: 3
-        };
-
-        document.getElementById('walletStars').textContent = walletData.stars;
-        document.getElementById('walletTickets').textContent = walletData.tickets;
-        document.getElementById('walletCoins').textContent = walletData.coins.toLocaleString();
-        document.getElementById('starsValue').textContent = walletData.starsValue.toFixed(2);
-        document.getElementById('ticketsValue').textContent = `Active: ${walletData.activeTickets}`;
+    // Helper Methods
+    capitalizeFirst(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
-    loadTransactionHistory() {
-        // Simulate transaction data
-        const transactions = [
-            { id: 1, type: 'STA Purchase', icon: '⭐', amount: '+100 STA', value: '+$10.00', date: '2 hours ago', category: 'sta' },
-            { id: 2, type: 'Ticket Purchase', icon: '🎫', amount: '-5 STA', value: '-$0.50', date: '1 day ago', category: 'tickets' },
-            { id: 3, type: 'Hedera Reward', icon: '⚡', amount: '+25 STA', value: '+$2.50', date: '2 days ago', category: 'hedera' },
-            { id: 4, type: 'Game Reward', icon: '🏆', amount: '+50 STA', value: '+$5.00', date: '3 days ago', category: 'rewards' }
-        ];
-
-        this.updateTransactionList(transactions);
+    updateElement(id, value) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
     }
 
-    updateTransactionList(transactions) {
-        const container = document.getElementById('transactionList');
-        container.innerHTML = '';
-
-        transactions.forEach(transaction => {
-            const transactionEl = document.createElement('div');
-            transactionEl.className = 'transaction-item';
-            transactionEl.innerHTML = `
-                <div class="transaction-icon">${transaction.icon}</div>
-                <div class="transaction-details">
-                    <div class="transaction-title">${transaction.type}</div>
-                    <div class="transaction-date">${transaction.date}</div>
-                </div>
-                <div class="transaction-amount ${transaction.amount.startsWith('+') ? 'positive' : 'negative'}">
-                    ${transaction.amount}<br>
-                    <small>${transaction.value}</small>
-                </div>
-            `;
-            container.appendChild(transactionEl);
-        });
-    }
-
-    updateHederaTransactionList(transactions) {
-        const container = document.getElementById('hederaTransactionList');
-        container.innerHTML = '';
-
-        transactions.forEach(transaction => {
-            const transactionEl = document.createElement('div');
-            transactionEl.className = 'transaction-item';
-            transactionEl.innerHTML = `
-                <div class="transaction-icon">⚡</div>
-                <div class="transaction-details">
-                    <div class="transaction-title">${transaction.type}</div>
-                    <div class="transaction-date">${transaction.date}</div>
-                </div>
-                <div class="transaction-amount ${transaction.amount.startsWith('+') ? 'positive' : 'negative'}">
-                    ${transaction.amount}
-                </div>
-            `;
-            container.appendChild(transactionEl);
-        });
-    }
-
-    filterTransactions() {
-        const filter = document.getElementById('transactionFilter').value;
-        // In real implementation, this would filter the transaction list
-        this.showNotification(`Filtering by: ${filter}`, 'info');
-    }
-
-    // Utility Functions
-    showNotification(message, type = 'info') {
-        // Use your existing notification system
-        if (typeof showNotification !== 'undefined') {
-            showNotification(message, type);
-        } else {
-            alert(message); // Fallback
-        }
+    clearInput(id) {
+        const element = document.getElementById(id);
+        if (element) element.value = '';
     }
 
     setupEventListeners() {
@@ -343,11 +486,95 @@ class WalletEngine {
         if (bankSTAInput) {
             bankSTAInput.addEventListener('input', () => this.calculateBankTotal());
         }
+
+        // Transaction filter
+        const transactionFilter = document.getElementById('transactionFilter');
+        if (transactionFilter) {
+            transactionFilter.addEventListener('change', () => this.filterTransactions());
+        }
+
+        // Modal close buttons
+        document.querySelectorAll('.modal-close').forEach(closeBtn => {
+            closeBtn.addEventListener('click', (e) => {
+                const modal = e.target.closest('.modal');
+                if (modal) modal.style.display = 'none';
+            });
+        });
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeSendModal();
+                this.closeReceiveModal();
+            }
+        });
+    }
+
+    showNotification(message, type = 'info') {
+        if (typeof window.showNotification === 'function') {
+            window.showNotification(message, type);
+        } else {
+            // Fallback notification
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${type === 'error' ? '#ff6b6b' : type === 'success' ? '#00ff88' : '#0099ff'};
+                color: #000;
+                border-radius: 5px;
+                font-weight: bold;
+                z-index: 10000;
+                max-width: 300px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+    }
+
+    // Public methods for HTML onclick handlers
+    async refreshWallet() {
+        await this.loadWalletData();
+        this.showNotification('Wallet data refreshed', 'success');
     }
 }
 
-// Initialize wallet engine
-const walletEngine = new WalletEngine();
+// Initialize the wallet engine when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.walletEngine = new WalletEngine();
+    window.walletEngine.init();
+});
 
-// Make available globally
-window.walletEngine = walletEngine;
+// Make methods available for HTML onclick handlers
+window.switchWalletTab = (tabName) => window.walletEngine.switchTab(tabName);
+window.switchPaymentMethod = (method) => window.walletEngine.switchPaymentMethod(method);
+window.selectCrypto = (crypto) => window.walletEngine.selectCrypto(crypto);
+window.processSTAPurchase = (method) => window.walletEngine.processSTAPurchase(method);
+window.confirmBankTransfer = () => window.walletEngine.confirmBankTransfer();
+window.showSendModal = () => window.walletEngine.showSendModal();
+window.closeSendModal = () => window.walletEngine.closeSendModal();
+window.showReceiveModal = () => window.walletEngine.showReceiveModal();
+window.closeReceiveModal = () => window.walletEngine.closeReceiveModal();
+window.copyToClipboard = (elementId) => window.walletEngine.copyToClipboard(elementId);
+window.copyCryptoAddress = () => window.walletEngine.copyCryptoAddress();
+window.copyReceiveAddress = () => window.walletEngine.copyReceiveAddress();
+window.openExplorer = (type) => window.walletEngine.openExplorer(type);
+window.confirmSend = () => window.walletEngine.confirmSend();
+window.refreshWallet = () => window.walletEngine.refreshWallet();

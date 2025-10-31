@@ -65,12 +65,6 @@ def create_test_account(client):
 
 def create_nft(title, symbol):
     """Create a non-fungible token EG"""
-    # NEBULA-1
-    # NEBULA-2
-    # NEBULA-3
-    # NEBULA-4
-    # NEBULA-5
-    # NEBULA-6
     client, operator_id, operator_key = setup_client()
     transaction = (
         TokenCreateTransaction()
@@ -200,8 +194,8 @@ def transfer_nft():
     """
     client, operator_id, operator_key = setup_client()
     #account_id, new_account_private_key = create_test_account(client)
-    token_id = create_nft(client, operator_id, operator_key)
-    print(f"TOKEN ID: {token_id}")
+    #token_id = create_nft(client, operator_id, operator_key)
+    #print(f"TOKEN ID: {token_id}")
     #token_id=AccountId.from_string(os.getenv('REG'))
     #nft_id = mint_nft(client, token_id, operator_key)
     #print(f"NFT ID: {nft_id}")
@@ -225,5 +219,3 @@ def transfer_nft():
 
 if __name__ == "__main__":
     transfer_nft()
-
-

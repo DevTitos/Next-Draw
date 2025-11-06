@@ -7,7 +7,6 @@
 
 ## 📌 Pitch Deck & Certification
 
-- **Pitch Deck:** [Astral Draw Presentation PDF](https://docs.google.com/presentation/d/1TsejiDqd_2KM4VB618AZykWy5KsYwVRn_laHQLmVUtU/edit?usp=sharing)  
 - **Hackathon Certification:** [Certification Link](https://drive.google.com/file/d/1eX8qYF11P2WMPhzK4EZ2ZMIOdi6Gvh1e/view)
 
 ---

@@ -1,3 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+from gameEngine.models import PlayerProfile
+from  .models import CommunityProposal
+admin.site.register(PlayerProfile)
+admin.site.register(CommunityProposal)

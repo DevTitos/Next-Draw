@@ -22,6 +22,7 @@ from hiero.utils import create_new_account
 from hiero.ft import associate_token
 from .models import CommunityProposal, ProposalVote, CommunityEvent, EventParticipant, GovernanceBadge, PlayerGovernanceStats
 from gameEngine.models import PlayerProfile
+from hiero.hcs import submit_message, create_topic
 
 @csrf_exempt
 @require_http_methods(["GET"])
@@ -77,7 +78,7 @@ def api_community_proposals(request):
 @require_http_methods(["POST"])
 @login_required
 def api_create_proposal(request):
-    """Create a new community proposal"""
+    """Create a new community proposal and an HCS topic for it"""
     try:
         data = json.loads(request.body)
         player_profile = PlayerProfile.objects.get(user=request.user)
@@ -87,16 +88,13 @@ def api_create_proposal(request):
         proposal_type = data.get('proposal_type', 'feature')
         
         if not title or not description:
-            return JsonResponse({
-                'error': 'Title and description are required'
-            }, status=400)
+            return JsonResponse({'error': 'Title and description are required'}, status=400)
         
         # Check if player can create proposals (minimum level 2)
         if player_profile.level < 2:
-            return JsonResponse({
-                'error': 'Level 2 required to create proposals'
-            }, status=400)
+            return JsonResponse({'error': 'Level 2 required to create proposals'}, status=400)
         
+        # Create the proposal in Django
         proposal = CommunityProposal.objects.create(
             title=title,
             description=description,
@@ -105,8 +103,30 @@ def api_create_proposal(request):
             status='draft'
         )
         
+        # Create a dedicated HCS topic for this proposal
+        topic_id = create_topic()
+        if not topic_id:
+            return JsonResponse({'error': 'Failed to create HCS topic for proposal'}, status=500)
+        
+        # Store HCS topic ID in the proposal
+        proposal.hcs_topic_id = str(topic_id)
+        proposal.save()
+        
+        # Optionally submit the initial proposal data to HCS
+        hcs_message = json.dumps({
+            'proposal_id': str(proposal.id),
+            'title': title,
+            'description': description,
+            'proposal_type': proposal_type,
+            'creator': player_profile.user.username,
+            'timestamp': str(timezone.now())
+        })
+        submit_result = submit_message(hcs_message)
+        if submit_result['status'] != 'success':
+            print(f"HCS initial proposal submission failed: {submit_result.get('message')}")
+        
         # Update governance stats
-        stats, created = PlayerGovernanceStats.objects.get_or_create(player=player_profile)
+        stats, _ = PlayerGovernanceStats.objects.get_or_create(player=player_profile)
         stats.proposals_created += 1
         stats.save()
         
@@ -115,24 +135,21 @@ def api_create_proposal(request):
         
         return JsonResponse({
             'success': True,
-            'message': 'Proposal created successfully',
-            'proposal_id': proposal.id
+            'message': 'Proposal created successfully with HCS topic',
+            'proposal_id': proposal.id,
+            'hcs_topic_id': proposal.hcs_topic_id
         })
         
     except PlayerProfile.DoesNotExist:
-        return JsonResponse({
-            'error': 'Player profile not found'
-        }, status=404)
+        return JsonResponse({'error': 'Player profile not found'}, status=404)
     except Exception as e:
-        return JsonResponse({
-            'error': f'Failed to create proposal: {str(e)}'
-        }, status=500)
+        return JsonResponse({'error': f'Failed to create proposal: {str(e)}'}, status=500)
 
 @csrf_exempt
 @require_http_methods(["POST"])
 @login_required
 def api_vote_proposal(request, proposal_id):
-    """Vote on a community proposal"""
+    """Vote on a community proposal and submit vote to HCS"""
     try:
         data = json.loads(request.body)
         player_profile = PlayerProfile.objects.get(user=request.user)
@@ -141,25 +158,19 @@ def api_vote_proposal(request, proposal_id):
         vote_type = data.get('vote')  # 'yes', 'no', 'abstain'
         
         if vote_type not in ['yes', 'no', 'abstain']:
-            return JsonResponse({
-                'error': 'Invalid vote type'
-            }, status=400)
+            return JsonResponse({'error': 'Invalid vote type'}, status=400)
         
         if proposal.status != 'active':
-            return JsonResponse({
-                'error': 'Voting is not active for this proposal'
-            }, status=400)
+            return JsonResponse({'error': 'Voting is not active for this proposal'}, status=400)
         
         if proposal.voting_end and timezone.now() > proposal.voting_end:
-            return JsonResponse({
-                'error': 'Voting period has ended'
-            }, status=400)
+            return JsonResponse({'error': 'Voting period has ended'}, status=400)
         
         # Calculate voting power based on player's equity and level
         voting_power = calculate_voting_power(player_profile)
         
         # Create or update vote
-        vote, created = ProposalVote.objects.update_or_create(
+        vote, _ = ProposalVote.objects.update_or_create(
             proposal=proposal,
             voter=player_profile,
             defaults={
@@ -180,8 +191,21 @@ def api_vote_proposal(request, proposal_id):
         
         proposal.save()
         
+        # Submit vote to HCS under the proposal’s topic
+        if proposal.hcs_topic_id:
+            hcs_message = json.dumps({
+                'proposal_id': str(proposal.id),
+                'voter': player_profile.user.username,
+                'vote': vote_type,
+                'voting_power': voting_power,
+                'timestamp': str(timezone.now())
+            })
+            submit_result = submit_message(hcs_message)
+            if submit_result['status'] != 'success':
+                print(f"HCS vote submission failed: {submit_result.get('message')}")
+        
         # Update governance stats
-        stats, created = PlayerGovernanceStats.objects.get_or_create(player=player_profile)
+        stats, _ = PlayerGovernanceStats.objects.get_or_create(player=player_profile)
         stats.votes_cast += 1
         stats.total_voting_power += voting_power
         stats.save()
@@ -201,17 +225,11 @@ def api_vote_proposal(request, proposal_id):
         })
         
     except CommunityProposal.DoesNotExist:
-        return JsonResponse({
-            'error': 'Proposal not found'
-        }, status=404)
+        return JsonResponse({'error': 'Proposal not found'}, status=404)
     except PlayerProfile.DoesNotExist:
-        return JsonResponse({
-            'error': 'Player profile not found'
-        }, status=404)
+        return JsonResponse({'error': 'Player profile not found'}, status=404)
     except Exception as e:
-        return JsonResponse({
-            'error': f'Failed to vote: {str(e)}'
-        }, status=500)
+        return JsonResponse({'error': f'Failed to vote: {str(e)}'}, status=500)
 
 @csrf_exempt
 @require_http_methods(["GET"])
@@ -392,7 +410,7 @@ def check_governance_badges(player_profile):
         print(f"Error checking governance badges: {e}")
 
 
-# wallet/views.py
+
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods

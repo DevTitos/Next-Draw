@@ -96,7 +96,7 @@ class CommunityProposal(models.Model):
     yes_votes = models.IntegerField(default=0)
     no_votes = models.IntegerField(default=0)
     abstain_votes = models.IntegerField(default=0)
-    
+    hcs_topic_id = models.CharField(max_length=100, blank=True, null=True, help_text="HCS Topic ID for this proposal")
     # Implementation details
     implementation_notes = models.TextField(blank=True, null=True)
     implemented_at = models.DateTimeField(null=True, blank=True)

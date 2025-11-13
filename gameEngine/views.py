@@ -471,7 +471,7 @@ def api_profile(request):
 def api_ventures(request):
     """Get all available ventures"""
     try:
-        ventures = Venture.objects.filter(is_active=True, status='active')
+        ventures = Venture.objects.filter(status='active')
         
         ventures_data = []
         for venture in ventures:
@@ -481,140 +481,180 @@ def api_ventures(request):
                 'venture_type': venture.venture_type,
                 'icon': venture.icon,
                 'description': venture.description,
-                'max_players': venture.max_players,
-                'current_players': venture.current_players,
+                'max_players': venture.max_participants,
+                'current_players': venture.current_participants,
                 'difficulty': venture.difficulty,
-                'winner_equity': float(venture.winner_equity),
-                'community_equity': float(venture.community_equity),
-                'base_equity': float(venture.base_equity),
-                'is_active': venture.is_active,
+                'winner_equity': float(venture.ceo_equity),
+                'community_equity': float(venture.participant_equity),
+                'base_equity': float(venture.total_equity),
+                'is_active': venture.status == 'active',
                 'is_featured': venture.is_featured,
                 'min_level_required': venture.min_level_required,
-                'ticket_cost': venture.ticket_cost,
+                'ticket_cost': venture.entry_ticket_cost,
                 'duration_days': venture.duration_days,
-                'available_slots': venture.max_players - venture.current_players,
+                'available_slots': venture.available_slots,
                 'is_joinable': venture.is_joinable,
-                'created_at': venture.created_at.isoformat()
+                'created_at': venture.created_at.isoformat(),
+                'maze_complexity': venture.maze_complexity,
+                'maze_time_limit': venture.maze_time_limit,
+                'required_patterns': venture.required_patterns
             })
         
         return JsonResponse(ventures_data, safe=False)
         
     except Exception as e:
+        import traceback
+        print(f"Error in api_ventures: {str(e)}")
+        print(traceback.format_exc())
         return JsonResponse({
             'error': f'Failed to load ventures: {str(e)}'
         }, status=500)
 
 @csrf_exempt
 @require_http_methods(["POST"])
+@login_required
 def api_join_venture(request, venture_id):
     """Join a venture"""
-    if not request.user.is_authenticated:
-        return JsonResponse({
-            'error': 'Authentication required'
-        }, status=401)
-    
     try:
-        venture = get_object_or_404(Venture, id=venture_id, is_active=True)
-        player_profile = PlayerProfile.objects.get(user=request.user)
+        # Get the venture - use status filter instead of is_active
+        venture = get_object_or_404(Venture, id=venture_id, status='active')
         
-        with transaction.atomic():
-            # Check if player has enough tickets
-            if player_profile.tickets < venture.ticket_cost:
-                return JsonResponse({
-                    'error': f'Not enough tickets. Required: {venture.ticket_cost}, Available: {player_profile.tickets}'
-                }, status=400)
-            
-            # Check if player meets level requirement
-            if player_profile.level < venture.min_level_required:
-                return JsonResponse({
-                    'error': f'Level {venture.min_level_required} required to join this venture'
-                }, status=400)
-            
-            # Check if venture has available slots
-            if venture.current_players >= venture.max_players:
-                return JsonResponse({
-                    'error': 'Venture is full'
-                }, status=400)
-            
-            # Check if player already joined this venture
-            if PlayerVenture.objects.filter(player=player_profile, venture=venture).exists():
-                return JsonResponse({
-                    'error': 'Already joined this venture'
-                }, status=400)
-            
-            # Calculate equity share
-            equity_share = venture.calculate_equity_share()
-            
-            # Use tickets
-            player_profile.tickets -= venture.ticket_cost
-            
-            # Create player venture
-            player_venture = PlayerVenture.objects.create(
-                player=player_profile,
-                venture=venture,
-                equity_share=equity_share,
-                initial_investment=1000.00,
-                current_value=1000.00
-            )
-            
-            # Update venture player count
-            venture.current_players += 1
-            venture.save()
-            
-            # Update player total equity
-            player_profile.total_equity = PlayerVenture.objects.filter(
-                player=player_profile
-            ).aggregate(total_equity=models.Sum('equity_share'))['total_equity'] or 0.0
-            
-            # Update ventures joined count
-            player_profile.total_ventures_joined += 1
-            
-            # Add XP
-            player_profile.xp += 10
-            player_profile.save()
-            
-            # Create activity
-            Activity.objects.create(
-                player=player_profile,
-                activity_type='venture_join',
-                icon='⚔️',
-                description=f'Joined venture: {venture.name}',
-                metadata={
-                    'venture_id': venture.id,
-                    'venture_name': venture.name,
-                    'equity_earned': equity_share,
-                    'tickets_used': venture.ticket_cost
-                }
-            )
-            
-            # Check for badge unlocks - FIXED: Pass player_profile
-            check_venture_badges(player_profile)
-            
+        # Get player profile
+        player_profile = get_object_or_404(PlayerProfile, user=request.user)
+        
+        # Check if player already joined
+        if VentureParticipation.objects.filter(player=player_profile, venture=venture).exists():
             return JsonResponse({
-                'success': True,
-                'message': f'Successfully joined {venture.name}',
-                'equity_share': equity_share,
-                'remaining_tickets': player_profile.tickets,
-                'venture': {
-                    'id': venture.id,
-                    'name': venture.name,
-                    'icon': venture.icon
+                'success': False,
+                'error': f'You have already joined {venture.name}'
+            }, status=400)
+        
+        # Check if venture is full
+        if venture.current_participants >= venture.max_participants:
+            return JsonResponse({
+                'success': False,
+                'error': f'{venture.name} is full'
+            }, status=400)
+        
+        # Check if player has enough tickets
+        if player_profile.tickets < venture.entry_ticket_cost:
+            return JsonResponse({
+                'success': False,
+                'error': f'Not enough tickets. Required: {venture.entry_ticket_cost}, You have: {player_profile.tickets}'
+            }, status=400)
+        
+        # Check level requirement
+        if player_profile.level < venture.min_level_required:
+            return JsonResponse({
+                'success': False,
+                'error': f'Level {venture.min_level_required} required to join this venture (Current: {player_profile.level})'
+            }, status=400)
+        
+        # Check if venture is joinable (using the property from your model)
+        if not venture.is_joinable:
+            return JsonResponse({
+                'success': False,
+                'error': f'{venture.name} is not currently accepting new participants'
+            }, status=400)
+        
+        # All checks passed - process the join
+        
+        # 1. Deduct tickets from player
+        player_profile.tickets -= venture.entry_ticket_cost
+        
+        # 2. Add XP for joining venture
+        player_profile.add_xp(10)
+        
+        # 3. Update venture participation stats
+        player_profile.total_ventures_joined += 1
+        player_profile.save()
+        
+        # 4. Create venture participation record
+        participation = VentureParticipation.objects.create(
+            player=player_profile,
+            venture=venture,
+            entry_tickets_used=venture.entry_ticket_cost,
+            equity_earned=0.0  # Will be calculated when venture completes
+        )
+        
+        # 5. Create activity
+        Activity.objects.create(
+            player=player_profile,
+            activity_type='venture_join',
+            icon='⚔️',
+            description=f'Joined venture: {venture.name}',
+            venture=venture
+        )
+        
+        # 6. Calculate equity share for this player
+        # Each participant gets equal share of participant_equity
+        equity_share = venture.participant_equity / venture.max_participants
+        
+        # 7. Create PlayerVenture relationship for equity tracking
+        from .models import PlayerVenture
+        player_venture = PlayerVenture.objects.create(
+            player=player_profile,
+            venture=venture,
+            equity_share=equity_share,
+            initial_investment=venture.entry_ticket_cost * 100,  # Convert to currency value
+            current_value=venture.entry_ticket_cost * 100  # Initial value same as investment
+        )
+        
+        # 8. Submit HCS message (if HCS is configured)
+        try:
+            from hiero.hcs import submit_venture_update
+            submit_venture_update(
+                venture_name=venture.name,
+                topic_id=venture.hcs_topic_id,
+                update_type="player_joined",
+                data={
+                    "player_id": player_profile.id,
+                    "player_username": player_profile.user.username,
+                    "equity_earned": equity_share,
+                    "tickets_spent": venture.entry_ticket_cost,
+                    "current_participants": venture.current_participants + 1,
+                    "available_slots": venture.available_slots - 1
                 }
-            })
-            
+            )
+        except Exception as hcs_error:
+            print(f"HCS message failed: {hcs_error}")
+            # Continue even if HCS fails
+        
+        # 9. Check if venture should start automatically
+        venture.check_and_start()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully joined {venture.name}!',
+            'equity_share': equity_share,
+            'tickets_remaining': player_profile.tickets,
+            'xp_gained': 10,
+            'venture': {
+                'id': venture.id,
+                'name': venture.name,
+                'current_participants': venture.current_participants + 1,
+                'available_slots': venture.available_slots - 1
+            }
+        })
+        
     except Venture.DoesNotExist:
         return JsonResponse({
-            'error': 'Venture not found'
+            'success': False,
+            'error': 'Venture not found or not active'
         }, status=404)
     except PlayerProfile.DoesNotExist:
         return JsonResponse({
+            'success': False,
             'error': 'Player profile not found'
         }, status=404)
     except Exception as e:
+        import traceback
+        print(f"Error joining venture: {str(e)}")
+        print(traceback.format_exc())
         return JsonResponse({
+            'success': False,
             'error': f'Failed to join venture: {str(e)}'
         }, status=500)
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def api_buy_tickets(request):
@@ -842,86 +882,143 @@ def get_active_venture_games(request):
             'error': str(e)
         })
 
-@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
-def join_venture_game(request, venture_id):
-    """Join a venture game using tickets"""
+@login_required
+def api_join_venture(request, venture_id):
+    """Join a venture"""
     try:
-        venture = get_object_or_404(Venture, id=venture_id)
-        player = request.user.playerprofile
+        # Get the venture - use status filter instead of is_active
+        venture = get_object_or_404(Venture, id=venture_id, status='active')
         
+        # Get player profile
+        player_profile = get_object_or_404(PlayerProfile, user=request.user)
+        
+        # Check if player already joined
+        if VentureParticipation.objects.filter(player=player_profile, venture=venture).exists():
+            return JsonResponse({
+                'success': False,
+                'error': f'You have already joined {venture.name}'
+            }, status=400)
+        
+        # Check if venture is full
+        if venture.current_participants >= venture.max_participants:
+            return JsonResponse({
+                'success': False,
+                'error': f'{venture.name} is full'
+            }, status=400)
+        
+        # Check if player has enough tickets
+        if player_profile.tickets < venture.entry_ticket_cost:
+            return JsonResponse({
+                'success': False,
+                'error': f'Not enough tickets. Required: {venture.entry_ticket_cost}, You have: {player_profile.tickets}'
+            }, status=400)
+        
+        # Check level requirement
+        if player_profile.level < venture.min_level_required:
+            return JsonResponse({
+                'success': False,
+                'error': f'Level {venture.min_level_required} required to join this venture (Current: {player_profile.level})'
+            }, status=400)
+        
+        # Check if venture is joinable (using the property from your model)
         if not venture.is_joinable:
             return JsonResponse({
-                'success': False, 
-                'error': 'Venture is not currently joinable'
-            })
-        
-        if player.tickets < venture.entry_ticket_cost:
-            return JsonResponse({
                 'success': False,
-                'error': f'Not enough tickets. Need {venture.entry_ticket_cost}'
-            })
+                'error': f'{venture.name} is not currently accepting new participants'
+            }, status=400)
         
-        if venture.participants.filter(player=player).exists():
-            return JsonResponse({
-                'success': False,
-                'error': 'Already joined this venture game'
-            })
+        # All checks passed - process the join
         
-        # Deduct tickets and create participation
-        player.tickets -= venture.entry_ticket_cost
-        player.total_ventures_joined += 1
-        player.save()
+        # 1. Deduct tickets from player
+        player_profile.tickets -= venture.entry_ticket_cost
         
+        # 2. Add XP for joining venture
+        player_profile.add_xp(10)
+        
+        # 3. Update venture participation stats
+        player_profile.total_ventures_joined += 1
+        player_profile.save()
+        
+        # 4. Create venture participation record
         participation = VentureParticipation.objects.create(
-            player=player,
+            player=player_profile,
             venture=venture,
-            entry_tickets_used=venture.entry_ticket_cost
+            entry_tickets_used=venture.entry_ticket_cost,
+            equity_earned=0.0  # Will be calculated when venture completes
         )
         
-        # AUTO-START: Check if venture should start immediately
-        should_start = venture.current_participants >= 1  # Start with any players for demo
-        
-        if should_start and venture.status == 'active':
-            venture.start_venture()
-        
-        # Record Hedera transaction
-        HederaTransaction.objects.create(
-            transaction_id=f"game_join_{venture.id}_{player.id}_{int(timezone.now().timestamp())}",
-            transaction_type='venture_entry',
-            player=player,
+        # 5. Create PlayerVenture relationship for equity tracking
+        from .models import PlayerVenture
+        equity_share = venture.participant_equity / venture.max_participants
+        player_venture = PlayerVenture.objects.create(
+            player=player_profile,
             venture=venture,
-            amount=venture.entry_ticket_cost,
-            from_account=player.hedera_account_id or '0.0.0',
-            to_account='0.0.0',
-            status='completed',
-            memo=f"Joined venture game: {venture.name}"
+            equity_share=equity_share,
+            initial_investment=venture.entry_ticket_cost * 100,
+            current_value=venture.entry_ticket_cost * 100
         )
         
-        # Create activity
+        # 6. Create activity
         Activity.objects.create(
-            player=player,
+            player=player_profile,
             activity_type='venture_join',
-            icon='🎮',
-            description=f'Joined CEO competition: {venture.name}',
+            icon='⚔️',
+            description=f'Joined venture: {venture.name}',
             venture=venture
         )
         
-        response_data = {
+        # 7. Submit HCS message
+        try:
+            from hiero.hcs import submit_venture_update
+            submit_venture_update(
+                venture_name=venture.name,
+                topic_id=venture.hcs_topic_id,
+                update_type="player_joined",
+                data={
+                    "player_id": player_profile.id,
+                    "player_username": player_profile.user.username,
+                    "equity_earned": equity_share,
+                    "tickets_spent": venture.entry_ticket_cost,
+                    "current_participants": venture.current_participants,
+                    "available_slots": venture.available_slots
+                }
+            )
+        except Exception as hcs_error:
+            print(f"HCS message failed: {hcs_error}")
+        
+        # 8. ✅ REMOVED: Don't auto-start the venture
+        # venture.check_and_start()  # COMMENT THIS LINE OUT
+        
+        return JsonResponse({
             'success': True,
-            'message': f'Successfully joined {venture.name} CEO competition!',
-            'remaining_tickets': player.tickets,
-            'venture_status': venture.status  # Return updated status
-        }
+            'message': f'Successfully joined {venture.name}!',
+            'equity_share': equity_share,
+            'tickets_remaining': player_profile.tickets,
+            'xp_gained': 10,
+            'venture': {
+                'id': venture.id,
+                'name': venture.name,
+                'current_participants': venture.current_participants,
+                'available_slots': venture.available_slots,
+                'status': venture.status  # ✅ Return status to frontend
+            }
+        })
         
-        return JsonResponse(response_data)
-        
-    except Exception as e:
+    except Venture.DoesNotExist:
         return JsonResponse({
             'success': False,
-            'error': str(e)
-        })
+            'error': 'Venture not found or not active'
+        }, status=404)
+    except Exception as e:
+        import traceback
+        print(f"Error joining venture: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to join venture: {str(e)}'
+        }, status=500)
 
 @login_required
 def get_venture_maze(request, venture_id):
@@ -1168,3 +1265,44 @@ def start_venture_game(venture_id):
         
     except Venture.DoesNotExist:
         return False
+    
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def api_start_venture(request, venture_id):
+    """Manually start a venture (for testing)"""
+    try:
+        venture = get_object_or_404(Venture, id=venture_id)
+        
+        # Only allow starting if venture is active and has participants
+        if venture.status != 'active':
+            return JsonResponse({
+                'success': False,
+                'error': f'Venture is not active (current status: {venture.status})'
+            }, status=400)
+        
+        if venture.current_participants == 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'No participants in this venture'
+            }, status=400)
+        
+        # Start the venture
+        if venture.start_venture():
+            return JsonResponse({
+                'success': True,
+                'message': f'Started {venture.name}! Maze sessions created for all participants.',
+                'venture_status': venture.status
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to start venture'
+            }, status=400)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to start venture: {str(e)}'
+        }, status=500)

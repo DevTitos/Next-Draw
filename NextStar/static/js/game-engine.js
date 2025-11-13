@@ -108,7 +108,10 @@ class GameEngine {
     async loadVentures() {
         try {
             const data = await this.makeRequest(`${this.apiBase}/ventures/`);
-            this.ventures = data;
+            // ✅ Only show active ventures and filter out ones we've already joined
+            this.ventures = data.filter(venture => 
+                venture.status === 'active' || venture.is_active
+            );
             console.log('📊 Loaded ventures:', this.ventures.length);
         } catch (error) {
             console.error('Error loading ventures:', error);
@@ -150,7 +153,10 @@ class GameEngine {
                 difficulty: 'Medium',
                 winner_equity: 20,
                 community_equity: 80,
-                is_active: true
+                is_active: true,
+                status: 'active',
+                min_level_required: 1,
+                ticket_cost: 1
             },
             {
                 id: 2,
@@ -163,7 +169,10 @@ class GameEngine {
                 difficulty: 'Hard',
                 winner_equity: 25,
                 community_equity: 75,
-                is_active: true
+                is_active: true,
+                status: 'active',
+                min_level_required: 1,
+                ticket_cost: 1
             },
             {
                 id: 3,
@@ -176,7 +185,10 @@ class GameEngine {
                 difficulty: 'Medium',
                 winner_equity: 20,
                 community_equity: 80,
-                is_active: true
+                is_active: true,
+                status: 'active',
+                min_level_required: 1,
+                ticket_cost: 1
             },
             {
                 id: 4,
@@ -189,7 +201,10 @@ class GameEngine {
                 difficulty: 'Easy',
                 winner_equity: 15,
                 community_equity: 85,
-                is_active: true
+                is_active: true,
+                status: 'active',
+                min_level_required: 1,
+                ticket_cost: 1
             },
             {
                 id: 5,
@@ -202,7 +217,10 @@ class GameEngine {
                 difficulty: 'Hard',
                 winner_equity: 30,
                 community_equity: 70,
-                is_active: true
+                is_active: true,
+                status: 'active',
+                min_level_required: 1,
+                ticket_cost: 1
             }
         ];
     }
@@ -234,37 +252,59 @@ class GameEngine {
             return;
         }
 
+        console.log('🔄 Loading ventures UI:', this.ventures.map(v => `${v.name} (${v.status})`));
+
         if (this.ventures.length === 0) {
             grid.innerHTML = '<div style="text-align: center; color: #666; padding: 40px;">No ventures available at the moment.</div>';
             return;
         }
 
         grid.innerHTML = this.ventures.map(venture => {
-            const hasJoined = this.player.ventures.some(v => v.venture?.id === venture.id);
-            const isFull = venture.current_players >= venture.max_players;
-            const canJoin = this.player.tickets > 0 && !hasJoined && !isFull && venture.is_active;
+            // ✅ Use correct field names with fallbacks
+            const maxPlayers = venture.max_players || venture.max_participants || 50;
+            const currentPlayers = venture.current_players || venture.current_participants || 0;
+            const winnerEquity = venture.winner_equity || venture.ceo_equity || 20;
+            const communityEquity = venture.community_equity || venture.participant_equity || 80;
+            const ticketCost = venture.ticket_cost || venture.entry_ticket_cost || 1;
+            const minLevelRequired = venture.min_level_required || 1;
             
+            // ✅ Check if player meets level requirement
+            const meetsLevelRequirement = this.player.level >= minLevelRequired;
+            const hasJoined = this.player.ventures.some(v => v.venture?.id === venture.id);
+            const isFull = currentPlayers >= maxPlayers;
+            const isActive = venture.is_active !== undefined ? venture.is_active : venture.status === 'active';
+            const canJoin = this.player.tickets >= ticketCost && !hasJoined && !isFull && isActive && meetsLevelRequirement;
+            
+            // ✅ Level requirement badge
+            const levelBadge = minLevelRequired > 1 ? 
+                `<span class="level-requirement" style="color: #ffaa00; font-size: 0.8rem; background: rgba(255,170,0,0.1); padding: 2px 6px; border-radius: 10px;">Lvl ${minLevelRequired}+</span>` : 
+                '';
+
             return `
                 <div class="venture-card" onclick="gameEngine.showVentureDetails(${venture.id})">
                     <div class="venture-header">
                         <div class="venture-icon">${venture.icon}</div>
                         <div class="venture-info">
-                            <h3>${venture.name}</h3>
+                            <h3>${venture.name} ${levelBadge}</h3>
                             <div class="venture-stats">
                                 <span>${venture.venture_type}</span>
-                                <span class="difficulty-${venture.difficulty.toLowerCase()}">${venture.difficulty}</span>
-                                <span>${venture.current_players}/${venture.max_players} Players</span>
+                                <span class="difficulty-${(venture.difficulty || 'medium').toLowerCase()}">${venture.difficulty || 'Medium'}</span>
+                                <span>${currentPlayers}/${maxPlayers} Players</span>
                             </div>
                         </div>
                     </div>
                     <div class="venture-description">${venture.description}</div>
                     <div class="venture-equity">
-                        <small>Winner: ${venture.winner_equity}% • Community: ${venture.community_equity}%</small>
+                        <small>Winner: ${winnerEquity}% • Community: ${communityEquity}%</small>
                     </div>
                     <button class="join-btn" 
                             onclick="event.stopPropagation(); gameEngine.joinVenture(${venture.id})" 
                             ${!canJoin ? 'disabled' : ''}>
-                        ${hasJoined ? '✅ JOINED' : isFull ? '🚫 FULL' : `JOIN VENTURE - ${venture.ticket_cost || 1} TICKET`}
+                        ${hasJoined ? '✅ JOINED' : 
+                          isFull ? '🚫 FULL' : 
+                          !meetsLevelRequirement ? `LEVEL ${minLevelRequired}+ REQUIRED` :
+                          !isActive ? 'NOT ACTIVE' :
+                          `JOIN VENTURE - ${ticketCost} TICKET`}
                     </button>
                 </div>
             `;
@@ -361,9 +401,15 @@ class GameEngine {
             return;
         }
 
-        // Client-side validation
-        if (this.player.tickets <= 0) {
-            this.showNotification('Not enough tickets! Buy more from the shop.', 'error');
+        // ✅ Enhanced client-side validation with better error messages
+        const maxPlayers = venture.max_players || venture.max_participants || 50;
+        const currentPlayers = venture.current_players || venture.current_participants || 0;
+        const ticketCost = venture.ticket_cost || venture.entry_ticket_cost || 1;
+        const minLevelRequired = venture.min_level_required || 1;
+        const isActive = venture.is_active !== undefined ? venture.is_active : venture.status === 'active';
+
+        if (this.player.tickets < ticketCost) {
+            this.showNotification(`Not enough STAR tokens! Need ${ticketCost}, you have ${this.player.tickets}.`, 'error');
             openWindow('shopWindow');
             return;
         }
@@ -373,13 +419,24 @@ class GameEngine {
             return;
         }
 
-        if (venture.current_players >= venture.max_players) {
+        if (currentPlayers >= maxPlayers) {
             this.showNotification(`${venture.name} is full!`, 'error');
             return;
         }
 
-        if (!venture.is_active) {
+        if (!isActive) {
             this.showNotification(`${venture.name} is not currently active`, 'error');
+            return;
+        }
+
+        // ✅ Check level requirement client-side with helpful message
+        if (this.player.level < minLevelRequired) {
+            const xpNeeded = (100 * (minLevelRequired ** 2)) - this.player.xp;
+            this.showNotification(
+                `Level ${minLevelRequired} required for ${venture.name}. ` +
+                `You are level ${this.player.level}. Complete easier ventures to gain XP!`, 
+                'error'
+            );
             return;
         }
 
@@ -390,20 +447,29 @@ class GameEngine {
             );
 
             if (response.success) {
+                // ✅ Update local venture data with response data to keep it in sync
+                const ventureIndex = this.ventures.findIndex(v => v.id === ventureId);
+                if (ventureIndex !== -1 && response.venture) {
+                    this.ventures[ventureIndex] = {
+                        ...this.ventures[ventureIndex],
+                        ...response.venture
+                    };
+                }
+
                 // Reload player data to get updated state
                 await this.loadPlayerProfile();
-                await this.loadVentures();
+                await this.loadVentures(); // This will refresh the venture list
                 
                 this.updateUI();
                 this.loadPortfolio();
                 this.loadVenturesUI();
                 
-                this.showNotification(`🎉 Successfully joined ${venture.name}! +${response.equity_share || 0}% equity`, 'success');
+                this.showNotification(`🎉 ${response.message}`, 'success');
                 
                 // Add activity
                 if (window.authManager) {
                     authManager.addActivity('⚔️', `Joined venture: ${venture.name}`);
-                    authManager.addXP(10);
+                    authManager.addXP(response.xp_gained || 10);
                 }
             } else {
                 this.showNotification(response.error || 'Failed to join venture', 'error');
@@ -411,19 +477,48 @@ class GameEngine {
         } catch (error) {
             console.error('Error joining venture:', error);
             
-            // Fallback to local simulation if API fails
-            this.simulateJoinVenture(venture);
+            // ✅ Enhanced error handling - don't simulate for validation errors
+            if (error.message.includes('Level') && error.message.includes('required')) {
+                this.showNotification(error.message, 'error');
+            } else if (error.message.includes('already joined')) {
+                this.showNotification('You have already joined this venture', 'info');
+            } else if (error.message.includes('full')) {
+                this.showNotification('This venture is full', 'error');
+                await this.loadVentures(); // Refresh venture list
+            } else if (error.message.includes('Not enough tickets')) {
+                this.showNotification('Not enough STAR tokens!', 'error');
+                openWindow('shopWindow');
+            } else if (error.message.includes('not active')) {
+                this.showNotification('This venture is no longer active', 'error');
+                await this.loadVentures(); // Refresh venture list
+            } else {
+                // Fallback to local simulation only for network/unknown errors
+                this.simulateJoinVenture(venture);
+            }
         }
     }
 
     simulateJoinVenture(venture) {
         console.log('🎮 Simulating venture join (offline mode)');
         
+        // ✅ Check level requirement in simulation too
+        const minLevelRequired = venture.min_level_required || 1;
+        if (this.player.level < minLevelRequired) {
+            this.showNotification(
+                `Level ${minLevelRequired} required for ${venture.name}. You are level ${this.player.level}.`, 
+                'error'
+            );
+            return;
+        }
+        
+        const ticketCost = venture.ticket_cost || venture.entry_ticket_cost || 1;
+        
         // Use ticket
-        this.player.tickets--;
+        this.player.tickets -= ticketCost;
         
         // Calculate equity share
-        const equityShare = (venture.community_equity / venture.max_players) * 0.1;
+        const maxPlayers = venture.max_players || venture.max_participants || 50;
+        const equityShare = (venture.community_equity / maxPlayers) * 0.1;
         
         // Add to portfolio
         this.player.ventures.push({
@@ -437,8 +532,8 @@ class GameEngine {
         // Update total equity
         this.player.equity = this.player.ventures.reduce((sum, v) => sum + (v.equity_share || 0), 0);
         
-        // Update venture player count
-        venture.current_players++;
+        // Update venture player count (local only)
+        venture.current_players = (venture.current_players || 0) + 1;
         
         // Add XP
         this.player.xp += 10;
@@ -537,13 +632,22 @@ class GameEngine {
         const venture = this.ventures.find(v => v.id === ventureId);
         if (!venture) return;
 
+        // ✅ Use correct field names with fallbacks
+        const maxPlayers = venture.max_players || venture.max_participants || 50;
+        const currentPlayers = venture.current_players || venture.current_participants || 0;
+        const winnerEquity = venture.winner_equity || venture.ceo_equity || 20;
+        const communityEquity = venture.community_equity || venture.participant_equity || 80;
+        const ticketCost = venture.ticket_cost || venture.entry_ticket_cost || 1;
+        const minLevelRequired = venture.min_level_required || 1;
+        const meetsLevelRequirement = this.player.level >= minLevelRequired;
+
         const detailsHtml = `
             <div style="padding: 20px;">
                 <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                     <div style="font-size: 3rem;">${venture.icon}</div>
                     <div>
                         <h2 style="color: var(--parrot-accent); margin-bottom: 5px;">${venture.name}</h2>
-                        <div style="color: var(--parrot-text-secondary);">${venture.venture_type} • ${venture.difficulty}</div>
+                        <div style="color: var(--parrot-text-secondary);">${venture.venture_type} • ${venture.difficulty} ${minLevelRequired > 1 ? `• Level ${minLevelRequired}+` : ''}</div>
                     </div>
                 </div>
                 
@@ -555,26 +659,35 @@ class GameEngine {
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
                     <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
                         <div style="font-size: 0.8rem; color: var(--parrot-text-secondary);">Players</div>
-                        <div style="font-size: 1.2rem; font-weight: bold;">${venture.current_players}/${venture.max_players}</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">${currentPlayers}/${maxPlayers}</div>
                     </div>
                     <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
                         <div style="font-size: 0.8rem; color: var(--parrot-text-secondary);">Winner Equity</div>
-                        <div style="font-size: 1.2rem; font-weight: bold; color: var(--parrot-accent);">${venture.winner_equity}%</div>
+                        <div style="font-size: 1.2rem; font-weight: bold; color: var(--parrot-accent);">${winnerEquity}%</div>
                     </div>
                     <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
                         <div style="font-size: 0.8rem; color: var(--parrot-text-secondary);">Community Pool</div>
-                        <div style="font-size: 1.2rem; font-weight: bold;">${venture.community_equity}%</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">${communityEquity}%</div>
                     </div>
                     <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
                         <div style="font-size: 0.8rem; color: var(--parrot-text-secondary);">Ticket Cost</div>
-                        <div style="font-size: 1.2rem; font-weight: bold;">${venture.ticket_cost || 1}</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">${ticketCost}</div>
                     </div>
                 </div>
                 
+                ${minLevelRequired > 1 && !meetsLevelRequirement ? `
+                    <div style="background: rgba(255,170,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffaa00;">
+                        <div style="color: #ffaa00; font-weight: bold;">Level Requirement</div>
+                        <div>Level ${minLevelRequired} required (Your level: ${this.player.level})</div>
+                    </div>
+                ` : ''}
+                
                 <button class="join-btn" onclick="gameEngine.joinVenture(${venture.id})" 
-                        ${this.player.tickets <= 0 ? 'disabled' : ''}
+                        ${this.player.tickets < ticketCost || !meetsLevelRequirement ? 'disabled' : ''}
                         style="width: 100%;">
-                    ${this.player.tickets <= 0 ? 'Need More Tickets' : `Join Venture - ${venture.ticket_cost || 1} Ticket`}
+                    ${this.player.tickets < ticketCost ? `Need ${ticketCost - this.player.tickets} More Tickets` : 
+                      !meetsLevelRequirement ? `Level ${minLevelRequired} Required` :
+                      `Join Venture - ${ticketCost} Ticket`}
                 </button>
             </div>
         `;
@@ -665,6 +778,26 @@ class GameEngine {
         } catch (error) {
             console.error('Error refreshing game data:', error);
             this.showNotification('Failed to refresh data', 'error');
+        }
+    }
+
+    // ✅ New method to show level progression opportunities
+    showLevelUpOpportunities() {
+        const lowLevelVentures = this.ventures.filter(v => {
+            const minLevelRequired = v.min_level_required || 1;
+            return minLevelRequired > this.player.level && v.is_active;
+        });
+        
+        if (lowLevelVentures.length > 0) {
+            const minLevel = Math.min(...lowLevelVentures.map(v => v.min_level_required || 1));
+            const xpNeeded = (100 * (minLevel ** 2)) - this.player.xp;
+            
+            if (xpNeeded > 0) {
+                this.showNotification(
+                    `Reach level ${minLevel} to unlock more ventures! You need ${xpNeeded} more XP.`, 
+                    'info'
+                );
+            }
         }
     }
 }

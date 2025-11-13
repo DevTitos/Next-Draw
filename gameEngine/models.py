@@ -383,6 +383,54 @@ class Venture(models.Model):
             return True
         return False
     
+    @property
+    def max_players(self):
+        return self.max_participants
+    
+    @property 
+    def current_players(self):
+        return self.current_participants
+    
+    @property
+    def winner_equity(self):
+        return self.ceo_equity
+    
+    @property
+    def community_equity(self):
+        return self.participant_equity
+    
+    @property
+    def ticket_cost(self):
+        return self.entry_ticket_cost
+    
+    @property
+    def is_active(self):
+        return self.status == 'active'
+    
+    @property
+    def is_featured(self):
+        return False  # Or add this field to your model
+    
+    @property
+    def base_equity(self):
+        return self.total_equity
+    
+    @property
+    def difficulty(self):
+        if self.maze_complexity <= 4:
+            return 'Easy'
+        elif self.maze_complexity <= 6:
+            return 'Medium'
+        elif self.maze_complexity <= 8:
+            return 'Hard'
+        else:
+            return 'Expert'
+    
+    @property
+    def duration_days(self):
+        hours = self.maze_time_limit / 3600
+        return max(1, round(hours / 24))
+    
     def check_and_start(self):
         """Check conditions and start the venture if ready"""
         if self.should_start:
@@ -392,33 +440,48 @@ class Venture(models.Model):
     
     def start_venture(self):
         """Start the venture maze competition"""
+        print(f"🔍 Attempting to start venture: {self.name}, Status: {self.status}, Participants: {self.current_participants}")
+        
         if self.status == 'active' and self.current_participants > 0:
             self.status = 'running'
             self.start_time = timezone.now()
             self.end_time = self.start_time + timezone.timedelta(seconds=self.maze_time_limit)
             self.save()
             
+            print(f"✅ Venture status changed to: {self.status}")
+            
             # Create maze sessions for all participants
-            for participant in self.participants.all():
-                MazeSession.objects.create(
-                    player=participant.player,
-                    venture=self,
-                    maze_configuration=self.generate_maze_configuration()
-                )
+            maze_sessions_created = 0
+            for participation in self.participants.all():
+                try:
+                    maze_config = self.generate_maze_configuration()
+                    maze_session = MazeSession.objects.create(
+                        player=participation.player,
+                        venture=self,
+                        maze_configuration=maze_config,
+                        current_position=maze_config['layout']['start']
+                    )
+                    maze_sessions_created += 1
+                    print(f"✅ Created maze session for {participation.player.user.username}")
+                    
+                    # Create activity for participant
+                    Activity.objects.create(
+                        player=participation.player,
+                        activity_type='venture_join',
+                        icon='🎮',
+                        description=f'{self.name} maze competition has started!',
+                        venture=self
+                    )
+                    
+                except Exception as e:
+                    print(f"❌ Failed to create maze session for {participation.player.user.username}: {e}")
             
-            # Create activity for all participants
-            for participant in self.participants.all():
-                Activity.objects.create(
-                    player=participant.player,
-                    activity_type='venture_join',
-                    icon='🎮',
-                    description=f'{self.name} maze competition has started!',
-                    venture=self
-                )
-            
+            print(f"✅ Created {maze_sessions_created} maze sessions total")
             return True
+        
+        print(f"❌ Venture not started. Status: {self.status}, Participants: {self.current_participants}")
         return False
-
+    
 class VentureParticipation(models.Model):
     """Track player participation in ventures"""
     player = models.ForeignKey(PlayerProfile, on_delete=models.CASCADE, related_name='venture_participations')

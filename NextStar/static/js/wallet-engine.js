@@ -5,7 +5,7 @@ class WalletEngine {
         this.currentPaymentMethod = 'card';
         this.selectedCrypto = null;
         this.staPrice = 0.10; // $0.10 per STA
-        this.apiBase = '/wallet/api';
+        this.apiBase = '/wallet/api'; // ✅ Match your Django URL pattern
     }
 
     async init() {
@@ -16,6 +16,8 @@ class WalletEngine {
 
     async makeRequest(endpoint, options = {}) {
         const url = `${this.apiBase}${endpoint}`;
+        console.log(`🔄 Making request to: ${url}`); // ✅ Debug logging
+        
         const config = {
             headers: {
                 'Content-Type': 'application/json',
@@ -27,14 +29,26 @@ class WalletEngine {
 
         try {
             const response = await fetch(url, config);
+            console.log(`📡 Response status: ${response.status} for ${url}`);
+            
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Network error');
+                if (response.status === 404) {
+                    throw new Error(`Endpoint not found: ${url}. Check Django URLs.`);
+                }
+                if (response.status === 500) {
+                    throw new Error('Server error. Check Django console.');
+                }
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
             }
-            return await response.json();
+            
+            const data = await response.json();
+            console.log(`✅ API response for ${url}:`, data);
+            return data;
+            
         } catch (error) {
-            console.error('Wallet API request failed:', error);
-            this.showNotification(`API Error: ${error.message}`, 'error');
+            console.error(`❌ API request failed for ${url}:`, error);
+            this.showNotification(`Wallet Error: ${error.message}`, 'error');
             throw error;
         }
     }
@@ -49,69 +63,162 @@ class WalletEngine {
 
     async loadWalletData() {
         try {
+            console.log('🔄 Loading wallet data from /overview/...');
             const response = await this.makeRequest('/overview/');
+            
             if (response.success) {
+                console.log('✅ Wallet data loaded successfully');
                 this.updateWalletUI(response.wallet_data);
-                this.updateTransactionList(response.recent_transactions);
+                if (response.recent_transactions) {
+                    this.updateTransactionList(response.recent_transactions);
+                }
             } else {
-                this.showNotification('Failed to load wallet data', 'error');
+                console.error('❌ Wallet API returned error:', response);
+                this.showNotification('Failed to load wallet data: ' + (response.error || 'Unknown error'), 'error');
+                this.loadDemoWalletData();
             }
         } catch (error) {
-            console.error('Error loading wallet data:', error);
+            console.error('❌ Error loading wallet data:', error);
+            this.loadDemoWalletData();
         }
     }
 
     async loadHederaData() {
         try {
+            console.log('🔄 Loading Hedera data from /hedera/...');
             const response = await this.makeRequest('/hedera/');
+            
             if (response.success) {
+                console.log('✅ Hedera data loaded successfully');
                 this.updateHederaUI(response.hedera_data);
-                this.updateHederaTransactionList(response.transactions);
+                if (response.transactions) {
+                    this.updateHederaTransactionList(response.transactions);
+                }
             } else {
-                this.showNotification('Failed to load Hedera data', 'error');
+                console.error('❌ Hedera API returned error:', response);
+                this.showNotification('Failed to load Hedera data: ' + (response.error || 'Unknown error'), 'error');
+                this.loadDemoHederaData();
             }
         } catch (error) {
-            console.error('Error loading Hedera data:', error);
+            console.error('❌ Error loading Hedera data:', error);
+            this.loadDemoHederaData();
         }
     }
 
     async loadTransactionHistory(filter = 'all') {
         try {
+            console.log(`🔄 Loading transactions with filter: ${filter}`);
             const response = await this.makeRequest(`/transactions/?filter=${filter}`);
+            
             if (response.success) {
                 this.updateTransactionList(response.transactions);
             } else {
                 this.showNotification('Failed to load transactions', 'error');
+                this.loadDemoWalletData();
             }
         } catch (error) {
             console.error('Error loading transactions:', error);
+            this.loadDemoWalletData();
         }
+    }
+
+    // Demo data fallbacks
+    loadDemoWalletData() {
+        console.log('🎮 Loading demo wallet data');
+        const demoData = {
+            starpoints: 150,
+            tickets: 5,
+            coins: 2500,
+            total_value: 15.00
+        };
+        
+        const demoTransactions = [
+            {
+                type: 'Venture Join',
+                date: new Date().toLocaleDateString(),
+                amount: '-1 STA',
+                value: 'Venture: AgriProcess AI',
+                icon: '⚔️'
+            },
+            {
+                type: 'Level Up Reward',
+                date: new Date(Date.now() - 86400000).toLocaleDateString(),
+                amount: '+2 STA',
+                value: 'Level 2 Achievement',
+                icon: '🎯'
+            },
+            {
+                type: 'Daily Login',
+                date: new Date(Date.now() - 172800000).toLocaleDateString(),
+                amount: '+1 STA',
+                value: 'Daily Reward',
+                icon: '🎮'
+            }
+        ];
+        
+        this.updateWalletUI(demoData);
+        this.updateTransactionList(demoTransactions);
+        this.showNotification('Using demo wallet data', 'info');
+    }
+
+    loadDemoHederaData() {
+        console.log('🎮 Loading demo Hedera data');
+        const demoHederaData = {
+            account_id: '0.0.1234567',
+            recipient_id: '0.0.1234567',
+            balance: '1,250 STA',
+            public_key: '302a300506032b6570032100123456789abcdef...'
+        };
+        
+        const demoHederaTransactions = [
+            {
+                type: 'STA Transfer',
+                date: new Date().toLocaleDateString(),
+                amount: '+100 STA',
+                icon: '⚡'
+            },
+            {
+                type: 'Venture Equity',
+                date: new Date(Date.now() - 86400000).toLocaleDateString(),
+                amount: '+5 STA',
+                icon: '📈'
+            }
+        ];
+        
+        this.updateHederaUI(demoHederaData);
+        this.updateHederaTransactionList(demoHederaTransactions);
+        this.showNotification('Using demo Hedera data', 'info');
     }
 
     updateWalletUI(walletData) {
         if (!walletData) return;
 
         const elements = {
-            'walletStars': walletData.starpoints,
-            'walletTickets': walletData.tickets,
-            'walletCoins': walletData.coins.toLocaleString(),
-            'starsValue': (walletData.starpoints * this.staPrice).toFixed(2),
-            'ticketsValue': `Active: ${walletData.tickets}`
+            'walletStars': walletData.starpoints || walletData.stars || 0,
+            'walletTickets': walletData.tickets || 0,
+            'walletCoins': (walletData.coins || 0).toLocaleString(),
+            'starsValue': `$${((walletData.starpoints || walletData.stars || 0) * this.staPrice).toFixed(2)}`,
+            'ticketsValue': `Active: ${walletData.tickets || 0}`
         };
 
         Object.entries(elements).forEach(([id, value]) => {
             const element = document.getElementById(id);
             if (element) element.textContent = value;
         });
+
+        // Update additional elements
+        this.updateElement('totalBalance', `$${((walletData.starpoints || walletData.stars || 0) * this.staPrice).toFixed(2)}`);
+        this.updateElement('availableBalance', `${walletData.starpoints || walletData.stars || 0} STA`);
     }
 
     updateHederaUI(hederaData) {
         if (!hederaData) return;
 
         const elements = {
-            'hederaAccountId': hederaData.account_id,
-            'hederaRecipientId': hederaData.recipient_id,
-            'hederaBalance': hederaData.balance
+            'hederaAccountId': hederaData.account_id || 'Not configured',
+            'hederaRecipientId': hederaData.recipient_id || 'Not configured',
+            'hederaBalance': hederaData.balance || '0 STA',
+            'hederaPublicKey': hederaData.public_key || 'Not available'
         };
 
         Object.entries(elements).forEach(([id, value]) => {
@@ -122,7 +229,10 @@ class WalletEngine {
 
     updateTransactionList(transactions) {
         const container = document.getElementById('transactionList');
-        if (!container) return;
+        if (!container) {
+            console.log('❌ transactionList element not found');
+            return;
+        }
 
         if (!transactions || transactions.length === 0) {
             container.innerHTML = '<div class="no-transactions">No transactions found</div>';
@@ -143,7 +253,7 @@ class WalletEngine {
                 </div>
                 <div class="transaction-amount ${tx.amount.startsWith('+') ? 'positive' : 'negative'}">
                     ${tx.amount}<br>
-                    <small>${tx.value}</small>
+                    <small>${tx.value || ''}</small>
                 </div>
             </div>
         `).join('');
@@ -151,7 +261,10 @@ class WalletEngine {
 
     updateHederaTransactionList(transactions) {
         const container = document.getElementById('hederaTransactionList');
-        if (!container) return;
+        if (!container) {
+            console.log('❌ hederaTransactionList element not found');
+            return;
+        }
 
         if (!transactions || transactions.length === 0) {
             container.innerHTML = '<div class="no-transactions">No Hedera transactions</div>';
@@ -173,6 +286,8 @@ class WalletEngine {
     }
 
     switchTab(tabName) {
+        console.log(`🔄 Switching to tab: ${tabName}`);
+        
         // Hide all tab contents
         document.querySelectorAll('.wallet-tab-content').forEach(tab => {
             tab.classList.remove('active');
@@ -206,6 +321,8 @@ class WalletEngine {
     }
 
     switchPaymentMethod(method) {
+        console.log(`🔄 Switching payment method: ${method}`);
+        
         // Hide all payment methods
         document.querySelectorAll('.payment-method').forEach(method => {
             method.style.display = 'none';
@@ -253,9 +370,13 @@ class WalletEngine {
         }
 
         try {
+            console.log(`🔄 Processing STA purchase: ${staAmount} via ${method}`);
             const response = await this.makeRequest('/buy-sta/', {
                 method: 'POST',
-                body: JSON.stringify({ amount: staAmount })
+                body: JSON.stringify({ 
+                    amount: staAmount,
+                    payment_method: method 
+                })
             });
 
             if (response.success) {
@@ -277,6 +398,7 @@ class WalletEngine {
     // Crypto Functions
     selectCrypto(crypto) {
         this.selectedCrypto = crypto;
+        console.log(`🔄 Selected crypto: ${crypto}`);
         
         // Update UI
         document.querySelectorAll('.crypto-option').forEach(option => {
@@ -341,6 +463,7 @@ class WalletEngine {
         }
 
         try {
+            console.log(`🔄 Sending ${amount} STA to ${recipient}`);
             const response = await this.makeRequest('/send-sta/', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -413,9 +536,12 @@ class WalletEngine {
 
     openExplorer(type) {
         const accountId = document.getElementById('hederaAccountId')?.textContent;
-        if (!accountId) return;
+        if (!accountId || accountId === 'Not configured') {
+            this.showNotification('Hedera account not configured', 'error');
+            return;
+        }
 
-        const baseUrl = 'https://hashscan.io/mainnet';
+        const baseUrl = 'https://hashscan.io/testnet'; // Use testnet for development
         let url = '';
         
         switch(type) {
@@ -475,6 +601,8 @@ class WalletEngine {
     }
 
     setupEventListeners() {
+        console.log('🔧 Setting up wallet event listeners');
+        
         // STA amount input listeners
         const staAmountInput = document.getElementById('staAmount');
         if (staAmountInput) {
@@ -551,6 +679,7 @@ class WalletEngine {
 
     // Public methods for HTML onclick handlers
     async refreshWallet() {
+        console.log('🔄 Manually refreshing wallet data');
         await this.loadWalletData();
         this.showNotification('Wallet data refreshed', 'success');
     }
@@ -558,6 +687,7 @@ class WalletEngine {
 
 // Initialize the wallet engine when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Initializing Wallet Engine...');
     window.walletEngine = new WalletEngine();
     window.walletEngine.init();
 });

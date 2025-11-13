@@ -219,7 +219,6 @@ class Venture(models.Model):
     
     # Hedera Integration
     hcs_topic_id = models.CharField(max_length=32)  # HCS Topic ID for this venture
-    token_id = models.CharField(max_length=32)  # HTS Token ID for equity shares
     nft_collection_id = models.CharField(max_length=32, blank=True, null=True)  # For badges
     
     # Game Economics
@@ -241,7 +240,7 @@ class Venture(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='upcoming')
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
-    
+    is_active = models.BooleanField(default=True)
     # Results
     winning_player = models.ForeignKey(
         PlayerProfile, 

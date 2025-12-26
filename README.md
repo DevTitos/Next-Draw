@@ -167,8 +167,7 @@ Dedicated to redefining African entrepreneurship through gaming and technology.
 
 🌐 **Website:** [\[Next Star Landing\]](https://next-draw.onrender.com/)(#)  
 🎮 **Enter Game:** [Launch Portal](https://next-draw.onrender.com/gaming/)(#)  
-📖 **Whitepaper:** [View PDF](#)  
-💬 **Discord:** [Join Community](#)
+📖 **Whitepaper:** [View PDF](https://docs.google.com/presentation/d/1GhBYMYHWrGHzW6LJYoXUjFHvlkcw6MwKx2rMNoMP2j8/edit?usp=sharing)  
 
 ---
 
